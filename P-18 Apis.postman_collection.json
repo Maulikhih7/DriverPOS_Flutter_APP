@@ -1,0 +1,2921 @@
+{
+  "info": {
+    "_postman_id": "c018b15a-75c4-441a-8141-9f2be8f432cc",
+    "name": "P-18 Apis",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "26747156"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Work Station Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "pm.environment.set(\"workstation_token\",response.accessToken)"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    // ---------------------------------- Backend Workstation ----------------------------------\r\n    \"email\": \"tonystark\",\r\n    \"password\": \"Partnership2025!\",\r\n    \"timeZone\": \"Asia/Calcutta\",\r\n    \"isPostMan\": true\r\n    // // ---------------------------------- Frontend Workstation ----------------------------------\r\n    // \"email\": \"helloworld\",\r\n    // \"password\": \"123456\",\r\n    // \"timeZone\": \"Asia/Calcutta\",\r\n    // \"isPostMan\": true\r\n    // // ---------------------------------- Night Shift Workstation ----------------------------------\r\n    // \"email\": \"Night\",\r\n    // \"password\": \"123456\",\r\n    // \"timeZone\": \"Asia/Calcutta\",\r\n    // \"isPostMan\": true\r\n    // // ---------------------------------- Night Shift Workstation ----------------------------------\r\n    // \"email\": \"Leo Messi\",\r\n    // \"password\": \"123456\",\r\n    // \"timeZone\": \"Asia/Calcutta\",\r\n    // \"isPostMan\": true\r\n    // // ---------------------------------- Staging / Demo Workstation ----------------------------------\r\n    // \"email\": \"DemoPos\",\r\n    // \"password\": \"demopassword\",\r\n    // \"timeZone\": \"Asia/Calcutta\",\r\n    // \"isPostMan\": true\r\n    // // ---------------------------------- Production Workstation ----------------------------------\r\n    // \"email\": \"Dev\",\r\n    // \"password\": \"123456\",\r\n    // \"timeZone\": \"America/Chicago\",\r\n    // \"isPostMan\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BaseURL}}/auth/login?role=workStation",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "workStation"
+                }
+              ]
+            },
+            "description": "### Auth Login (Employee)\n\nThis endpoint allows employees to log in and obtain an authentication token.\n\n#### Request Body\n\n- `email` (string, required): The email address of the employee.\n    \n- `password` (string, required): The password for the employee's account.\n    \n\n#### Response\n\n- `message` (string): A message indicating the result of the login attempt.\n    \n- `success` (boolean): Indicates whether the login attempt was successful.\n    \n- `data` (object): An object containing user-specific information, including the user's role, associated golf course, default terminal, and verification status.\n    \n    - `role` (string): The role of the employee.\n        \n    - `golfCourse` (string): The associated golf course.\n        \n    - `defaultTerminal` (string): The default terminal for the employee.\n        \n    - `isVerified` (boolean): Indicates whether the employee's account is verified.\n        \n- `token` (string): An authentication token to be used for subsequent API calls.\n    \n\n#### Example Response\n\n``` json\n{\n    \"message\": \"\",\n    \"success\": true,\n    \"data\": {\n        \"isVerified\": true\n    }\n}\n\n ```\n\n``` json\n{\n    \"message\": \"\",\n    \"success\": true,\n    \"data\": {\n        \"role\": \"\",\n        \"golfCourse\": \"\",\n        \"defaultTerminal\": \"\",\n        \"isVerified\": true\n    },\n    \"token\": \"\"\n}\n\n ```\n\nThis endpoint allows an employee to log in.\n\n#### Request Body\n\n- **email** (text, required): The email of the employee.\n    \n- **password** (text, required): The password of the employee.\n    \n\n#### Response\n\n- **message** (string): A message related to the login.\n    \n- **success** (boolean): Indicates if the login was successful.\n    \n- **data** (object): Contains information about the employee.\n    \n    - **role** (string): The role of the employee.\n        \n    - **golfCourse** (string): The golf course associated with the employee.\n        \n    - **defaultTerminal** (string): The default terminal for the employee.\n        \n    - **isVerified** (boolean): Indicates if the employee is verified.\n        \n- **token** (string): The authentication token.\n    \n\n#### Example Response\n\n``` json\n{\n    \"message\": \"\",\n    \"success\": true,\n    \"data\": {\n        \"isVerified\": true\n    }\n}\n\n ```"
+          },
+          "response": [
+            {
+              "name": "Login -> isVerified: false",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"tonystark\",\r\n    \"password\": \"Partnership2025!\",\r\n    \"timeZone\": \"Asia/Calcutta\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/auth/login?role=employee",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ],
+                  "query": [
+                    {
+                      "key": "role",
+                      "value": "employee"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Set-Cookie",
+                  "value": "token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2ZTNkNzg4YTJlNmY2MTljYThlNDM3MSIsInJvbGUiOiJFbXBsb3llZSIsImlhdCI6MTcyNjI5ODgwNSwiZXhwIjoxNzI3NTk0ODA1fQ.03D3ajdBT6ary9xcwGmAb7Q_unmywpS7wu_ClUZywR4; Path=/; HttpOnly"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "72"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"48-fzvxcKNciS5V3HkO2JxWLlVkpNI\""
+                },
+                {
+                  "key": "Vary",
+                  "value": "Accept-Encoding"
+                },
+                {
+                  "key": "Date",
+                  "value": "Sat, 14 Sep 2024 07:26:45 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Change Password\",\n    \"success\": true,\n    \"data\": {\n        \"isVerified\": false\n    }\n}"
+            },
+            {
+              "name": "Login -> isVerified: true",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"tonystark\",\r\n    \"password\": \"Partnership2025!\",\r\n    \"timeZone\": \"Asia/Calcutta\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/auth/login?role=workStation",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ],
+                  "query": [
+                    {
+                      "key": "role",
+                      "value": "workStation"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "X-RateLimit-Limit",
+                  "value": "10"
+                },
+                {
+                  "key": "X-RateLimit-Remaining",
+                  "value": "9"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 14 Jan 2026 05:41:21 GMT"
+                },
+                {
+                  "key": "X-RateLimit-Reset",
+                  "value": "1768369342"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"4f3-44j2Xjpy7UCSaVkwG6nh0J+tHvI\""
+                },
+                {
+                  "key": "Vary",
+                  "value": "Accept-Encoding"
+                },
+                {
+                  "key": "Content-Encoding",
+                  "value": "gzip"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                },
+                {
+                  "key": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Logged in successfully\",\n    \"success\": true,\n    \"data\": {\n        \"_id\": \"67c03c57a406e6177af70219\",\n        \"fullName\": \"tonystark\",\n        \"name\": \"Backend Work station\",\n        \"golfCourse\": {\n            \"_id\": \"67931c58362def9e4875031a\",\n            \"name\": \"Eden Gardens Golf Course\",\n            \"logo\": \"https://golf-management.s3.ca-central-1.amazonaws.com/golf-course/1760338672829-driverpos-20251013122750.jpg\"\n        },\n        \"terminal\": {\n            \"_id\": \"67aaf141ca4de603e24d0105\",\n            \"name\": \"Snack Counter\"\n        },\n        \"isVerified\": true,\n        \"role\": \"Admin\",\n        \"isFirstLogin\": false,\n        \"isNightShift\": false,\n        \"nightShift\": null,\n        \"permissions\": [\n            \"Business Tee Sheet\",\n            \"Business Inventory\",\n            \"Business Gift Cards\",\n            \"Business Settings\",\n            \"Business Employees\",\n            \"Business Customers\",\n            \"Business Reports\",\n            \"Business Punch Card\",\n            \"Business Sales Cart\",\n            \"Business Transactions\",\n            \"Business Work Stations\"\n        ]\n    },\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzAzYzU3YTQwNmU2MTc3YWY3MDIxOSIsInJvbGUiOiJXb3JrU3RhdGlvbiIsInRpbWVab25lIjoiQXNpYS9DYWxjdXR0YSIsImlhdCI6MTc2ODM2OTI4MiwiZXhwIjoxNzY4NDE1Mzk5fQ.edfVDMFZIfElw2GJLJS4LKhx1XtEReXFyNFbBet9s9w\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzAzYzU3YTQwNmU2MTc3YWY3MDIxOSIsInJvbGUiOiJXb3JrU3RhdGlvbiIsInRpbWVab25lIjoiQXNpYS9DYWxjdXR0YSIsImlhdCI6MTc2ODM2OTI4MiwiZXhwIjoxNzY4NDE1Mzk5fQ.edfVDMFZIfElw2GJLJS4LKhx1XtEReXFyNFbBet9s9w\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change 1st Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "pm.environment.set(\"employee_token\",response.token)"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"PSD001\",\r\n    \"newPassword\": \"123456\",\r\n    \"confirmPassword\": \"123456\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BaseURL}}/auth/password?role=workStation",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "auth",
+                "password"
+              ],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "workStation"
+                }
+              ]
+            },
+            "description": "This endpoint allows the user to update the password for an employee. The HTTP PUT request is made to {{BaseURL}}/employee/password with the request body containing the employee's email, new password, and confirmation of the new password.\n\n### Request Body\n\n- email (string): The email of the employee.\n    \n- newPassword (string): The new password for the employee.\n    \n- confirmPassword (string): Confirmation of the new password.\n    \n\n### Response\n\nThe response to this request is in JSON format with the following schema:\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"message\": {\n            \"type\": \"string\"\n        },\n        \"success\": {\n            \"type\": \"boolean\"\n        }\n    }\n}\n\n ```\n\nThe response contains a message field which is a string, and a success field which is a boolean indicating the success status of the password update operation.\n\n#### Example Response\n\n``` json\n{\n    \"message\": \"\",\n    \"success\": true\n}\n\n ```"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"email\": \"Kevin88@example.org\",\r\n    \"newPassword\": \"123456\",\r\n    \"confirmPassword\": \"123456\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/employee/password",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "employee",
+                    "password"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "58"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"3a-kVF41UU1/MHJ7BIQwYhwvaRVXZ4\""
+                },
+                {
+                  "key": "Vary",
+                  "value": "Accept-Encoding"
+                },
+                {
+                  "key": "Date",
+                  "value": "Sat, 14 Sep 2024 07:24:11 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Password changed successfully\",\n    \"success\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Employee Pin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "pm.environment.set(\"workstation_token\",response.accessToken)"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"pinNumber\": \"7980\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BaseURL}}/employee/verify-pin",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "employee",
+                "verify-pin"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pro Shop",
+      "item": [
+        {
+          "name": "Get Pro Shop",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BaseURL}}/label/products?department=Food And Beverage&limit=10&page=1",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "label",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "department",
+                  "value": "Food And Beverage"
+                },
+                {
+                  "key": "label",
+                  "value": "Kids",
+                  "disabled": true
+                },
+                {
+                  "key": "label",
+                  "value": "Pizza",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "name",
+                  "value": "Cheese Pizza",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Proshop Prod with Scanner",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BaseURL}}/label/products/scan/AZFEGHKQZIB",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "label",
+                "products",
+                "scan",
+                "AZFEGHKQZIB"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Chips",
+                  "disabled": true
+                },
+                {
+                  "key": "department",
+                  "value": "Food And Beverage",
+                  "disabled": true
+                },
+                {
+                  "key": "label",
+                  "value": "Kids",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Customer Punch Card Products",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BaseURL}}/punchcard/customer/67970fdba6d96d4ecd05d999",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "punchcard",
+                "customer",
+                "67970fdba6d96d4ecd05d999"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Customer Driving Range Products",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BaseURL}}/driving-range-pass/customer/67970fdba6d96d4ecd05d999",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "driving-range-pass",
+                "customer",
+                "67970fdba6d96d4ecd05d999"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Sales Cart",
+      "item": [
+        {
+          "name": "Config",
+          "item": [
+            {
+              "name": "Get Cart Config",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BaseURL}}/sales/cart-config",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "cart-config"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Add to sales",
+          "item": [
+            {
+              "name": "Add Customer to Sales",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"slotId\": \"20260508630AM6228\",\r\n    \"individual\": [\r\n        \"69fd7c4eb745f91a7c35c0bb\",\r\n        \"69fd7c4eb745f91a7c35c0b9\"\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/add/customer",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "add",
+                    "customer"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add Teesheet to Sales",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"individual\": [\r\n        \"690d86fdb1ac345e132a2047\"\r\n    ],\r\n    // \"baseSlotId\": \"1762493259542bd64a7e10151\"\r\n    \"groupId\": \"176249325952611849fc2b481\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/add/teesheet",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "add",
+                    "teesheet"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add Product to Sales",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"cartState\": \"Sale\",\r\n    // \"cartState\": \"Hold\",\r\n    \"golfCourseId\": \"67931c58362def9e4875031a\",\r\n    // Customers\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    // \r\n    \"product\": [\r\n        // Normal Product\r\n        {\r\n            \"item\": \"679906c0a04897c78e8c42b5\",\r\n            \"quantity\": 1,\r\n            \"price\": 20,\r\n            // Total Percentage\r\n            \"tax\": 7\r\n        },\r\n        // Add On Product\r\n        {\r\n            \"item\": \"679906c0a04897c78e8c42b5\",\r\n            \"quantity\": 1,\r\n            \"price\": 20,\r\n            // Total Percentage\r\n            \"tax\": 7,\r\n            \"addOns\": [\r\n                // {\r\n                //     \"addOn\": \"69d5ee4ecfae7c0fc41c78d3\",\r\n                //     \"quantity\": 1,\r\n                //     \"price\": 2\r\n                // },\r\n                {\r\n                    \"addOn\": \"69d5ef2cd3f0f7d33c0efa88\",\r\n                    \"quantity\": 1,\r\n                    \"price\": 1\r\n                }\r\n            ]\r\n        }\r\n        // Punch Card Product\r\n        // {\r\n        //     \"item\": \"6840113460d019b51ce8bf8d\",\r\n        //     \"punchCard\": \"6979dc82c992afb9dc322f86\",\r\n        //     \"quantity\": 3,\r\n        //     \"price\": 6.5,\r\n        //     // Total Percentage\r\n        //     \"tax\": 7\r\n        // }\r\n        // // Driving Range Product\r\n        // {\r\n        //     \"item\": \"6943b2024dbbf84428fe6e81\",\r\n        //     \"drivingRangePass\": \"697d9b1ed51927cef470f9c5\",\r\n        //     \"quantity\": 10,\r\n        //     \"price\": 15,\r\n        //     // Total Percentage\r\n        //     \"tax\": 7\r\n        // }\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/add/product",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "add",
+                    "product"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add To Cart",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"golfCourseId\": \"67931c58362def9e4875031a\",\r\n    // // Teesheet\r\n    // \"slotId\": \"20260508630AM6228\",\r\n    // \"individual\": [\r\n    //     {\r\n    //         \"docId\": \"69fd7c4eb745f91a7c35c0bb\",\r\n    //         \"isCart\": true\r\n    //     },\r\n    //     {\r\n    //         \"docId\": \"69fd7c4eb745f91a7c35c0bb\",\r\n    //         \"isCart\": false\r\n    //     },\r\n    //     {\r\n    //         \"docId\": \"69fd7c4eb745f91a7c35c0b9\",\r\n    //         \"isCart\": true\r\n    //     },\r\n    //     {\r\n    //         \"docId\": \"69fd7c4eb745f91a7c35c0b9\",\r\n    //         \"isCart\": false\r\n    //     }\r\n    // ]\r\n    // ,\r\n    // Products\r\n    \"product\": [\r\n        {\r\n            \"item\": \"679c6ec57ae0f998db51820a\",\r\n            \"isReturn\": true,\r\n            \"quantity\": 1,\r\n            \"price\": 30,\r\n            // Total Percentage\r\n            \"tax\": 29\r\n        },\r\n        {\r\n            \"item\": \"679b581ff4f09cd477929855\",\r\n            \"quantity\": 1,\r\n            \"price\": 15,\r\n            // Total Percentage\r\n            \"tax\": 29\r\n        }\r\n        // ,\r\n        // {\r\n        //     \"item\": \"679906c0a04897c78e8c42b5\",\r\n        //     \"quantity\": 2,\r\n        //     \"price\": 20,\r\n        //     // Total Percentage\r\n        //     \"tax\": 7,\r\n        //     \"addOns\": [\r\n        //         {\r\n        //             \"addOn\": \"69d5ef2cd3f0f7d33c0efa88\",\r\n        //             \"quantity\": 2,\r\n        //             \"price\": 1\r\n        //         }\r\n        //     ]\r\n        // }\r\n        // // Punch Card Product\r\n        // {\r\n        //     \"item\": \"6943b2024dbbf84428fe6e81\",\r\n        //     \"punchCard\": \"697053069e6d7e07e62ac6a2\",\r\n        //     \"quantity\": 3,\r\n        //     \"price\": 15,\r\n        //     // Total Percentage\r\n        //     \"tax\": 7\r\n        // }\r\n        // // Driving Range Product\r\n        // {\r\n        //     \"item\": \"6943b2024dbbf84428fe6e81\",\r\n        //     \"drivingRangePass\": \"697d9b1ed51927cef470f9c5\",\r\n        //     \"quantity\": 10,\r\n        //     \"price\": 15,\r\n        //     // Total Percentage\r\n        //     \"tax\": 7\r\n        // }\r\n    ]\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/add/item",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "add",
+                    "item"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Sales Cart",
+          "item": [
+            {
+              "name": "View Sales",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BaseURL}}/sales?cartState=Sale",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Sale"
+                    }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "Tee sheet - View Sales",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{BaseURL}}/sales?cartState=Sale",
+                      "host": [
+                        "{{BaseURL}}"
+                      ],
+                      "path": [
+                        "sales"
+                      ],
+                      "query": [
+                        {
+                          "key": "cartState",
+                          "value": "Sale"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Origin",
+                      "value": "*"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"678-Vy4AfCnraHqDFfUMOR8mgRjh5SQ\""
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Accept-Encoding"
+                    },
+                    {
+                      "key": "Content-Encoding",
+                      "value": "gzip"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Sat, 13 Dec 2025 07:24:26 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"data\": {\n        \"_id\": \"693d14a4e0ca7fc9dccc9d73\",\n        \"saleId\": \"SO-684284\",\n        \"cartState\": \"Sale\",\n        \"totalDiscountAmount\": 3.45,\n        \"totalCartAmount\": 20.92,\n        \"totalTaxAmount\": 1.37,\n        \"customerDetails\": {\n            \"_id\": \"67970fdba6d96d4ecd05d999\",\n            \"fullName\": \"Koushik Dutta\",\n            \"isGuest\": false\n        },\n        \"employeeDetails\": null,\n        \"teesheet\": {\n            \"slotId\": \"20251213630AM4443\",\n            \"originalSlotId\": \"20251213630AM4443\",\n            \"baseSlotId\": \"176559944315051815834e4f5\",\n            \"groupId\": \"176559944313517af6b697829\",\n            \"date\": \"2025-12-13T00:00:00.000Z\",\n            \"startingSlot\": \"6:30AM\",\n            \"persons\": 4,\n            \"carts\": 1,\n            \"holes\": 18,\n            \"customers\": [\n                {\n                    \"customerId\": \"67970fdba6d96d4ecd05d999\",\n                    \"fullName\": \"Koushik Dutta\",\n                    \"color\": \"#f19a7b\",\n                    \"description\": \"Green Fee\",\n                    \"isCart\": false,\n                    \"amount\": 10,\n                    \"discountRate\": 15,\n                    \"discountAmount\": 1.5,\n                    \"amountAfterDiscount\": 8.5,\n                    \"taxRate\": 6.999999999999999,\n                    \"tax\": 6.999999999999999,\n                    \"taxAmount\": 0.595,\n                    \"lineTotal\": 9.095,\n                    \"raw\": {\n                        \"amount\": 10,\n                        \"originalTaxAmount\": 0.7\n                    },\n                    \"docId\": \"693ce8d3cd96ccec66576171\",\n                    \"customerCartId\": \"693d14a4e0ca7fc9dccc9dc2\"\n                },\n                {\n                    \"customerId\": \"67970fdba6d96d4ecd05d999\",\n                    \"fullName\": \"Koushik Dutta\",\n                    \"color\": \"#f19a7b\",\n                    \"description\": \"Cart Fee\",\n                    \"isCart\": true,\n                    \"amount\": 13,\n                    \"discountRate\": 15,\n                    \"discountAmount\": 1.95,\n                    \"amountAfterDiscount\": 11.05,\n                    \"taxRate\": 7.000000000000001,\n                    \"tax\": 7.000000000000001,\n                    \"taxAmount\": 0.7735000000000001,\n                    \"lineTotal\": 11.823500000000001,\n                    \"raw\": {\n                        \"amount\": 13,\n                        \"originalTaxAmount\": 0.91\n                    },\n                    \"docId\": \"693ce8d3cd96ccec66576171\",\n                    \"customerCartId\": \"693d14a4e0ca7fc9dccc9dc3\"\n                }\n            ]\n        },\n        \"taxDetails\": [\n            {\n                \"taxRateName\": \"Green Fee Tax\",\n                \"percentage\": 7,\n                \"taxAmount\": 0.595\n            },\n            {\n                \"taxRateName\": \"Cart Fee Tax\",\n                \"percentage\": 7,\n                \"taxAmount\": 0.7735000000000001\n            }\n        ]\n    },\n    \"holdData\": [],\n    \"terminal\": {\n        \"_id\": \"67aaf141ca4de603e24d0105\",\n        \"name\": \"Snack Counter\",\n        \"feePercentage\": 3\n    }\n}"
+                },
+                {
+                  "name": "Pro Shop - View Sales",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{BaseURL}}/sales?cartState=Sale",
+                      "host": [
+                        "{{BaseURL}}"
+                      ],
+                      "path": [
+                        "sales"
+                      ],
+                      "query": [
+                        {
+                          "key": "cartState",
+                          "value": "Sale"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Origin",
+                      "value": "*"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"481-UghoVj39D6GaONylytCSdt39HoA\""
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Accept-Encoding"
+                    },
+                    {
+                      "key": "Content-Encoding",
+                      "value": "gzip"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Sat, 13 Dec 2025 07:29:50 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    },
+                    {
+                      "key": "Transfer-Encoding",
+                      "value": "chunked"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"data\": {\n        \"_id\": \"693d15dee0ca7fc9dccca17f\",\n        \"saleId\": \"SO-364284\",\n        \"cartState\": \"Sale\",\n        \"totalDiscountAmount\": 4.5,\n        \"totalCartAmount\": 32.89,\n        \"totalTaxAmount\": 7.4,\n        \"customerDetails\": {\n            \"_id\": \"67970fdba6d96d4ecd05d999\",\n            \"fullName\": \"Koushik Dutta\",\n            \"isGuest\": false,\n            \"familyMemberOf\": null\n        },\n        \"employeeDetails\": null,\n        \"products\": {\n            \"items\": [\n                {\n                    \"itemId\": \"679c6ec57ae0f998db51820a\",\n                    \"name\": \"12 Can Beer\",\n                    \"image\": \"https://golf-management.s3.ca-central-1.amazonaws.com/inventory/61HCFE8KFTL.jpg\",\n                    \"quantity\": 1,\n                    \"maxQuantity\": 0,\n                    \"amount\": 30,\n                    \"discountRate\": 15,\n                    \"discountPerItem\": 4.5,\n                    \"discountAmount\": 4.5,\n                    \"amountAfterDiscount\": 25.5,\n                    \"taxRate\": 29,\n                    \"tax\": 29,\n                    \"taxPerItem\": 7.395,\n                    \"taxAmount\": 7.395,\n                    \"lineTotal\": 32.894999999999996,\n                    \"raw\": {\n                        \"amount\": 30,\n                        \"originalTaxAmount\": 8.7\n                    },\n                    \"taxDetails\": [\n                        {\n                            \"taxRateName\": \"Sales Tax\",\n                            \"percentage\": 7,\n                            \"_id\": \"689d65f19f842bd7241cb6b3\"\n                        },\n                        {\n                            \"taxRateName\": \"Service Fee\",\n                            \"percentage\": 22,\n                            \"_id\": \"689d65f19f842bd7241cb6b4\"\n                        }\n                    ]\n                }\n            ]\n        },\n        \"taxDetails\": [\n            {\n                \"taxRateName\": \"Sales Tax\",\n                \"percentage\": 7,\n                \"taxAmount\": 1.7850000000000001\n            },\n            {\n                \"taxRateName\": \"Service Fee\",\n                \"percentage\": 22,\n                \"taxAmount\": 5.61\n            }\n        ]\n    },\n    \"holdData\": [],\n    \"terminal\": {\n        \"_id\": \"67aaf141ca4de603e24d0105\",\n        \"name\": \"Snack Counter\",\n        \"feePercentage\": 3\n    }\n}"
+                },
+                {
+                  "name": "Gift Card - View Sales",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{BaseURL}}/sales?cartState=Sale",
+                      "host": [
+                        "{{BaseURL}}"
+                      ],
+                      "path": [
+                        "sales"
+                      ],
+                      "query": [
+                        {
+                          "key": "cartState",
+                          "value": "Sale"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Origin",
+                      "value": "*"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "697"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"2b9-IQjtbhkclVkdV+cNXYHtkq5D+9c\""
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Accept-Encoding"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Sat, 13 Dec 2025 07:30:37 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"data\": {\n        \"_id\": \"693d1615e0ca7fc9dccca2c6\",\n        \"saleId\": \"SO-055909\",\n        \"cartState\": \"Sale\",\n        \"totalDiscountAmount\": 0,\n        \"totalCartAmount\": 25,\n        \"totalTaxAmount\": 0,\n        \"customerDetails\": {\n            \"_id\": \"67970fdba6d96d4ecd05d999\",\n            \"fullName\": \"Koushik Dutta\",\n            \"isGuest\": false\n        },\n        \"employeeDetails\": null,\n        \"giftCards\": [\n            {\n                \"customer\": \"Koushik Dutta\",\n                \"cardNumber\": \"3426 6387 9320 0830\",\n                \"barcodeImage\": \"https://golf-management.s3.ca-central-1.amazonaws.com/barcodes/development/giftcards/3426 6387 9320 0830.png\",\n                \"quantity\": 1,\n                \"expiryDate\": \"2025-12-31\",\n                \"amount\": 25,\n                \"discountAmount\": 0,\n                \"amountAfterDiscount\": 25,\n                \"lineTotal\": 25\n            }\n        ],\n        \"taxDetails\": []\n    },\n    \"holdData\": [],\n    \"terminal\": {\n        \"_id\": \"67aaf141ca4de603e24d0105\",\n        \"name\": \"Snack Counter\",\n        \"feePercentage\": 3\n    }\n}"
+                },
+                {
+                  "name": "Punch Card - View Sales",
+                  "originalRequest": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{BaseURL}}/sales?cartState=Sale",
+                      "host": [
+                        "{{BaseURL}}"
+                      ],
+                      "path": [
+                        "sales"
+                      ],
+                      "query": [
+                        {
+                          "key": "cartState",
+                          "value": "Sale"
+                        }
+                      ]
+                    }
+                  },
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": null,
+                  "header": [
+                    {
+                      "key": "X-Powered-By",
+                      "value": "Express"
+                    },
+                    {
+                      "key": "Access-Control-Allow-Origin",
+                      "value": "*"
+                    },
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json; charset=utf-8"
+                    },
+                    {
+                      "key": "Content-Length",
+                      "value": "558"
+                    },
+                    {
+                      "key": "ETag",
+                      "value": "W/\"22e-Ka9EvGj3R/ao/ixZe5LQEPANLvc\""
+                    },
+                    {
+                      "key": "Vary",
+                      "value": "Accept-Encoding"
+                    },
+                    {
+                      "key": "Date",
+                      "value": "Sat, 13 Dec 2025 07:32:03 GMT"
+                    },
+                    {
+                      "key": "Connection",
+                      "value": "keep-alive"
+                    },
+                    {
+                      "key": "Keep-Alive",
+                      "value": "timeout=5"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\n    \"data\": {\n        \"_id\": \"693d166d29cceb3b16509a8a\",\n        \"saleId\": \"SO-809868\",\n        \"cartState\": \"Sale\",\n        \"totalDiscountAmount\": 0,\n        \"totalCartAmount\": 30,\n        \"totalTaxAmount\": 0,\n        \"customerDetails\": {\n            \"_id\": \"67970fdba6d96d4ecd05d999\",\n            \"fullName\": \"Koushik Dutta\",\n            \"isGuest\": false\n        },\n        \"employeeDetails\": null,\n        \"punchCards\": [\n            {\n                \"name\": \"Master Punch Card 111\",\n                \"quantity\": 1,\n                \"expiryDate\": \"2025-12-31\",\n                \"amount\": 30,\n                \"discountRate\": 0,\n                \"discountAmount\": 0,\n                \"amountAfterDiscount\": 30,\n                \"lineTotal\": 30\n            }\n        ],\n        \"taxDetails\": []\n    },\n    \"holdData\": [],\n    \"terminal\": {\n        \"_id\": \"67aaf141ca4de603e24d0105\",\n        \"name\": \"Snack Counter\",\n        \"feePercentage\": 3\n    }\n}"
+                }
+              ]
+            },
+            {
+              "name": "Remove Items",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{admin_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"customerId\": \"66f52b5b585d30cfca7a017f\",\r\n    \"customerCartId\": \"678a1bf6a8100171fb626a14\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/remove",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "remove"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Sales",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    // \"customerId\": \"67931c58362def9e48750322\",\r\n    // \"itemId\": \"6798ce9f878d9af184aad42f\",\r\n    // \"quantity\": 6\r\n    // \"customerId\": \"690981e35eda70520e43de01\"\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales?cartState=Sale",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Sale"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Clear Sales",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{BaseURL}}/sales/clear?cartState=Sale",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "clear"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Sale"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Hold Cart",
+          "item": [
+            {
+              "name": "Send to Hold Sales",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"customerId\": \"\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/cart/SO-946116?cartState=Hold",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "cart",
+                    "SO-946116"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Hold"
+                    },
+                    {
+                      "key": "cartState",
+                      "value": "Sale",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Send Hold Cart to Sales Cart",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/cart/:id?cartState=Sale",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "cart",
+                    ":id"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Sale"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "SO-993454"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Hold Cart",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BaseURL}}/sales/holdcarts",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "holdcarts"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Hold Sales",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{BaseURL}}/sales/remove/SO-019364",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "remove",
+                    "SO-019364"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Pre Auth Cart",
+          "item": [
+            {
+              "name": "Send Pre Auth Request",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"amount\": 100,\r\n    \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"paymentType\": \"Credit\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/pre-auth/:saleId",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "pre-auth",
+                    ":saleId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "saleId",
+                      "value": "SO-155597"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Payments",
+          "item": [
+            {
+              "name": "Checkout -> All",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"totalAmount\": 118.24, // Total Amount means total cart amount\r\n    // \r\n    \"applyGiftCard\": true,\r\n    // \"giftCardNumber\": \"8971 0055 2097 2350\",\r\n    // \"giftCardAmount\": 50,\r\n    \"applyMultiGiftCardData\": [\r\n        {\r\n            \"giftCardNumber\": \"1357 1012 7842 3190\",\r\n            \"giftCardAmount\": 100\r\n        },\r\n        {\r\n            \"giftCardNumber\": \"9052 6951 0235 1237\",\r\n            \"giftCardAmount\": 100\r\n        }\r\n    ],\r\n    // \r\n    \"applyRainCheck\": true,\r\n    // \"rainCheckNumber\": \"PO-208\",\r\n    // \"rainCheckAmount\": 11,\r\n    \"applyMultiRainCheckData\": [\r\n        {\r\n            \"rainCheckNumber\": \"1357 1012 7842 3190\",\r\n            \"rainCheckAmount\": 100\r\n        },\r\n        {\r\n            \"rainCheckNumber\": \"9052 6951 0235 1237\",\r\n            \"rainCheckAmount\": 100\r\n        }\r\n    ],\r\n    // \r\n    \"amount\": 57.24, // Amount means after applying all credit ,  Whats left\r\n    \"totalDiscountAmount\": 19.5,\r\n    \"changeGiven\": 0,\r\n    \"paymentType\": \"Cash\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Cash",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67931c58362def9e48750322\",\r\n    \"totalDiscountAmount\": 0,\r\n    \"totalAmount\": 16.05,\r\n    \"amount\": 16.05,\r\n    \"changeGiven\": 0,\r\n    \"paymentType\": \"Cash\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Card",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"isPostMan\": true,\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"totalAmount\": 32.89,\r\n    \"amount\": 32.89,\r\n    \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"paymentType\": \"Credit\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Send OTP to Customer",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"customerEmail\": \"koushik.dutta@hih7.com\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/sendOtp",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "sendOtp"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Saved Card",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"totalAmount\": 35.19,\r\n    \"amount\": 35.19,\r\n    \"otp\": \"269165\",\r\n    \"cardId\": \"68c3e9a426f94c308c72580d\",\r\n    \"customerEmail\": \"koushik.dutta@hih7.com\",\r\n    \"paymentType\": \"SavedCard\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Store Credit",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"applyStoreCredit\": true,\r\n    \"storeCreditNumber\": \"227457\",\r\n    \"storeCreditAmount\": 13.33,\r\n    \"totalAmount\": 32.10,\r\n    \"amount\": 18.77,\r\n    \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"paymentType\": \"Credit\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Gift Card",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"totalAmount\": 281.49,\r\n    // \r\n    \"applyGiftCard\": true,\r\n    \"applyMultiGiftCardData\": [\r\n        {\r\n            \"giftCardNumber\": \"1357 1012 7842 3194\",\r\n            \"giftCardAmount\": 100\r\n        },\r\n        {\r\n            \"giftCardNumber\": \"9052 6951 0235 1237\",\r\n            \"giftCardAmount\": 100\r\n        }\r\n    ],\r\n    // \r\n    \"amount\": 81.49,\r\n    \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"paymentType\": \"Cash\"\r\n}\r\n// {\r\n//     \"pinNumber\": \"7980\",\r\n//     \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n//     \"applyGiftCard\": true,\r\n//     \"giftCardNumber\": \"4576 0064 9233 0783\",\r\n//     \"giftCardAmount\": 78.60,\r\n//     \"totalAmount\": 85.60,\r\n//     \"amount\": 7.00,\r\n//     \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n//     \"paymentType\": \"Cash\"\r\n// }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Raincheck",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"totalAmount\": 281.49,\r\n    // \r\n    \"applyRainCheck\": true,\r\n    \"applyMultiRainCheckData\": [\r\n        {\r\n            \"rainCheckNumber\": \"PO-245\",\r\n            \"rainCheckAmount\": 61\r\n        },\r\n        {\r\n            \"rainCheckNumber\": \"PO-238\",\r\n            \"rainCheckAmount\": 45\r\n        }\r\n    ],\r\n    // \r\n    \"amount\": 175.49,\r\n    \"paymentType\": \"Cash\"\r\n}\r\n// {\r\n//     \"pinNumber\": \"7980\",\r\n//     \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n//     \"totalAmount\": 32.1,\r\n//     // \r\n//     \"applyRainCheck\": true,\r\n//     \"rainCheckNumber\": \"RC-1\",\r\n//     \"rainCheckAmount\": 5.35,\r\n//     // \r\n//     \"amount\": 26.75,\r\n//     \"paymentType\": \"Cash\"\r\n// }",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Punch Card",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    \"applyPunchCard\": true,\r\n    \"punchCardNumber\": \"694395528b960c6ac69c3c54\",\r\n    \"totalDiscountAmount\": 0,\r\n    \"totalAmount\": 13.91,\r\n    \"amount\": 13.91,\r\n    \"paymentType\": \"Cash\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Anonymous Gift Card",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    // \"customerId\": \"67de911dab2bff859027230f\",\r\n    \"applyAnonymousGiftCard\": true,\r\n    \"giftCardNumber\": \"9249 0070 7252 0310\",\r\n    \"giftCardAmount\": 12.84,\r\n    \"totalAmount\": 12.84,\r\n    \"amount\": 0,\r\n    // \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"paymentType\": \"Cash\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Negative",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    // Customer Id\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    // // Guest Customer Id\r\n    // \"customerId\": \"67931c58362def9e48750322\",\r\n    \"totalAmount\": -20,\r\n    \"amount\": -20,\r\n    \"changeGiven\": 0,\r\n    // \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"paymentType\": \"Negative\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Return",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    // Customer Id\r\n    \"customerId\": \"67970fdba6d96d4ecd05d999\",\r\n    // // Guest Customer Id\r\n    // \"customerId\": \"67931c58362def9e48750322\",\r\n    \"totalAmount\": -16.45,\r\n    \"amount\": -16.45,\r\n    \"changeGiven\": 0,\r\n    \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"type\": \"Return\",\r\n    \"paymentType\": \"Cash\"\r\n    // \"paymentType\": \"Credit\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> Split Payment",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67931c58362def9e48750322\",\r\n    \"type\": \"Split\",\r\n    \"totalAmount\": 18.73,\r\n    \"amount\": 18.73,\r\n    \"cardAmount\":15,\r\n    \"cashAmount\": 3.73,\r\n    \"totalDiscountAmount\": 0,\r\n    \"changeGiven\": 0\r\n    ,\r\n    \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"paymentType\": \"Credit\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Checkout -> ByPass Payment",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"customerId\": \"67bd60520189625495b09a59\",\r\n    \"totalAmount\": 25.77,\r\n    \"amount\": 25.77,\r\n    \"totalDiscountAmount\": 0,\r\n    \"paymentType\": \"Bypass\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/checkout",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "checkout"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Apply Gift Card",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"giftCardNumber\": \"7436 2444 2877 2279\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/applyGiftCard",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "applyGiftCard"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Refund",
+          "item": [
+            {
+              "name": "Send To Return",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PUT",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"customerId\": \"\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/cart/SO-257926?cartState=Return",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "cart",
+                    "SO-257926"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Return"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Issue Refund",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/issue-refund/67bd9fbb39ceda5547d963fc",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "issue-refund",
+                    "67bd9fbb39ceda5547d963fc"
+                  ],
+                  "query": [
+                    {
+                      "key": "orderMethod",
+                      "value": "Online",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "View Returns",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BaseURL}}/sales?cartState=Return",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Return"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Non-Refund Items",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    // \"customerId\": \"66f52b5b585d30cfca7a017f\",\r\n    // \"customerCartId\": \"678a1bf6a8100171fb626a14\"\r\n    \"itemId\": \"679b581ff4f09cd477929855\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/sales/remove?cartState=Return",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "remove"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Return"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Clear Return Cart",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{BaseURL}}/sales/clear?cartState=Return",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "sales",
+                    "clear"
+                  ],
+                  "query": [
+                    {
+                      "key": "cartState",
+                      "value": "Return"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Refund Order",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{workstation_token}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"pinNumber\": \"7980\",\r\n    \"terminalId\": \"67aaf141ca4de603e24d0105\",\r\n    \"refundMethod\": \"Original\",\r\n    // \"refundMethod\": \"StoreCredit\",\r\n    \"amount\": 26.45,\r\n    \"customerId\": \"67931c58362def9e48750322\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BaseURL}}/transaction/refund",
+                  "host": [
+                    "{{BaseURL}}"
+                  ],
+                  "path": [
+                    "transaction",
+                    "refund"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Customer List",
+      "item": [
+        {
+          "name": "Add Customer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "accountNumber",
+                  "value": "C{{$randomInt}}",
+                  "type": "text"
+                },
+                {
+                  "key": "fname",
+                  "value": "{{$randomFirstName}}",
+                  "type": "text"
+                },
+                {
+                  "key": "lname",
+                  "value": "{{$randomLastName}}",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "123456",
+                  "type": "text"
+                },
+                {
+                  "key": "phoneNumber",
+                  "value": "3453453453",
+                  "type": "text"
+                },
+                {
+                  "key": "dateOfBirth",
+                  "value": "1999-05-11",
+                  "type": "text"
+                },
+                {
+                  "key": "streetAddress",
+                  "value": "{{$randomStreetAddress}}",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "Albion",
+                  "type": "text"
+                },
+                {
+                  "key": "state",
+                  "value": "IA",
+                  "type": "text"
+                },
+                {
+                  "key": "country",
+                  "value": "USA",
+                  "type": "text"
+                },
+                {
+                  "key": "zipCode",
+                  "value": "50005",
+                  "type": "text"
+                },
+                {
+                  "key": "membershipTypeId",
+                  "value": "67b4d0449b2dd724515e7168",
+                  "type": "text"
+                },
+                {
+                  "key": "coupleId",
+                  "value": "",
+                  "type": "text"
+                },
+                {
+                  "key": "family",
+                  "value": "[{\"id\":\"67fcd51368750e1c301fef61\",\"relation\":\"Parent\",\"age\":60}]",
+                  "type": "text"
+                },
+                {
+                  "key": "drivingRangePassId",
+                  "value": "6967357e0761a562df2ef61e",
+                  "type": "text",
+                  "uuid": "dbf43ed9-d4a5-4668-8195-531aacd6bc36"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-01-07",
+                  "type": "text"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-12-31",
+                  "type": "text"
+                },
+                {
+                  "key": "groupId",
+                  "value": "",
+                  "type": "text"
+                },
+                {
+                  "key": "status",
+                  "value": "true",
+                  "type": "text"
+                },
+                {
+                  "key": "comments",
+                  "value": "{{$randomLoremParagraph}}",
+                  "type": "text"
+                },
+                {
+                  "key": "golfCourseId",
+                  "value": "67931c58362def9e4875031a",
+                  "type": "text"
+                },
+                {
+                  "key": "byPassPayment",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "profilePicture",
+                  "type": "file",
+                  "src": "/C:/Users/Koushik/Downloads/default-customer.png"
+                },
+                {
+                  "key": "isCountryClubCustomer",
+                  "value": "false",
+                  "type": "text",
+                  "uuid": "2bee5c01-24ad-4ea9-b3dc-c6cbeea0a763"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer/add",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer",
+                "add"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customers",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": []
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer?isCompany=false&page=1&isCountryClub=false&limit=100",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Koushik",
+                  "disabled": true
+                },
+                {
+                  "key": "isCompany",
+                  "value": "false"
+                },
+                {
+                  "key": "group",
+                  "value": "dfbd",
+                  "disabled": true
+                },
+                {
+                  "key": "exportData",
+                  "value": "true",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "isCountryClub",
+                  "value": "false"
+                },
+                {
+                  "key": "isMembership",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "100"
+                },
+                {
+                  "key": "name",
+                  "value": "john",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Search Customers",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": []
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer/search?name=Koushik Dutta",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "isCompany",
+                  "value": "false",
+                  "disabled": true
+                },
+                {
+                  "key": "group",
+                  "value": "Birdie",
+                  "disabled": true
+                },
+                {
+                  "key": "name",
+                  "value": "Koushik Dutta"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get One Customer",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": []
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer/:id",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "67ed01d48da19e793fc26bfe"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Customer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "profilePicture",
+                  "type": "file",
+                  "src": "/C:/Users/Koushik/Downloads/20250708211755.jpg"
+                },
+                {
+                  "key": "byPassPayment",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "membershipTypeId",
+                  "value": "67de90e7082c9bbae6b52fc7",
+                  "type": "text"
+                },
+                {
+                  "key": "coupleId",
+                  "value": "67ec152534026347322e6082",
+                  "type": "text",
+                  "disabled": true
+                },
+                {
+                  "key": "comments",
+                  "value": "Testing Driving Range",
+                  "type": "text"
+                },
+                {
+                  "key": "accountNumber",
+                  "value": "C17555628",
+                  "type": "text"
+                },
+                {
+                  "key": "family",
+                  "value": "[{\"id\":\"67ec152534026347322e6082\",\"relation\":\"Spouse\",\"age\":30}]",
+                  "type": "text",
+                  "uuid": "eb7d8cbf-1e6d-4ef2-90fd-349c6b0a4f5b",
+                  "disabled": true
+                },
+                {
+                  "key": "family",
+                  "value": "[{\"id\":\"67ec152534026347322e6082\",\"relation\":\"Spouse\",\"age\":30},{\"id\":\"68cae81f93125ae8b44971ff\",\"relation\":\"Parent\",\"age\":80}]",
+                  "type": "text",
+                  "uuid": "eb7d8cbf-1e6d-4ef2-90fd-349c6b0a4f5b",
+                  "disabled": true
+                },
+                {
+                  "key": "drivingRangePassId",
+                  "value": "6967357e0761a562df2ef61e",
+                  "type": "text",
+                  "uuid": "ef51630a-d1b5-4de1-bfde-e48cab1dda5e",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer/update/696e23e94e71db08a33248bd",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer",
+                "update",
+                "696e23e94e71db08a33248bd"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Customer",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer/delete/66e7fd081467bb06ee0f8616",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer",
+                "delete",
+                "66e7fd081467bb06ee0f8616"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Customer List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/C:/Users/admin/Downloads/cust_filterBook1.xlsx"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer/upload",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer",
+                "upload"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Upload Customer Account Number",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "/C:/Users/admin/Downloads/Driver.io membership list.xlsx"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer/upload/accountnumber",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer",
+                "upload",
+                "accountnumber"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer Reservation History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BaseURL}}/teesheet/customer-reservation/:customerId?limit=20&page=1&startDate=2025-01-01&endDate=2026-06-02",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "teesheet",
+                "customer-reservation",
+                ":customerId"
+              ],
+              "query": [
+                {
+                  "key": "bookingStatus",
+                  "value": "Canceled",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2025-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-06-02"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "customerId",
+                  "value": "67970fdba6d96d4ecd05d999"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Saved Cards",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": []
+            },
+            "url": {
+              "raw": "{{BaseURL}}/customer/mySavedCards/68c3e9a426f94c308c72580d?customerId=67970fdba6d96d4ecd05d999",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "customer",
+                "mySavedCards",
+                "68c3e9a426f94c308c72580d"
+              ],
+              "query": [
+                {
+                  "key": "customerId",
+                  "value": "67970fdba6d96d4ecd05d999"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Notification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BaseURL}}/notification-settings/:_id",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "notification-settings",
+                ":_id"
+              ],
+              "variable": [
+                {
+                  "key": "_id",
+                  "value": "67970fdba6d96d4ecd05d999"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Notification",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{workstation_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": {\r\n        \"transaction\": true,\r\n        \"booking\": true,\r\n        \"update\": true,\r\n        \"cancellation\": true,\r\n        \"reminders\": true,\r\n        \"promotions\": true\r\n    },\r\n    \"text\": {\r\n        \"transaction\": true,\r\n        \"booking\": true,\r\n        \" update\": true,\r\n        \"cancellation\": true,\r\n        \"reminders\": true,\r\n        \"promotions\": true\r\n    }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BaseURL}}/notification-settings/:_id",
+              "host": [
+                "{{BaseURL}}"
+              ],
+              "path": [
+                "notification-settings",
+                ":_id"
+              ],
+              "variable": [
+                {
+                  "key": "_id",
+                  "value": "67970fdba6d96d4ecd05d999"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

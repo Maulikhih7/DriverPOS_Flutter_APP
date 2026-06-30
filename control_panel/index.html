@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver POS — Screen Control Panel</title>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+  :root {
+    --green: #7FB069;
+    --green-dark: #6a9a57;
+    --navy: #244065;
+    --bg: #F4F4F4;
+    --card: #FFFFFF;
+    --border: #E5E7EB;
+    --text: #1F2937;
+    --muted: #6B7280;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Nunito", "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: var(--navy);
+    color: white;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 { font-size: 18px; margin: 0; font-weight: 800; }
+  header .sub { font-size: 12px; opacity: 0.75; }
+  #status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.1);
+  }
+  #status .dot { width: 8px; height: 8px; border-radius: 50%; background: #999; }
+  #status.connected .dot { background: #4ADE80; }
+  #status.connecting .dot { background: #FBBF24; }
+  #status.error .dot { background: #F87171; }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    padding: 14px 24px 0;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .tab-btn {
+    padding: 9px 18px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: none;
+  }
+  .tab-btn.active { background: var(--card); color: var(--navy); border-color: var(--green); border-bottom: 3px solid var(--green); }
+
+  main { max-width: 980px; margin: 0 auto; padding: 0 24px 80px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section summary {
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--navy);
+    background: #FAFAFA;
+    list-style: none;
+  }
+  .section summary::-webkit-details-marker { display: none; }
+  .section summary::before { content: "▸ "; color: var(--green-dark); }
+  .section[open] summary::before { content: "▾ "; }
+  .section .body { padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.02em; }
+  .field input[type=text], .field input[type=number], .field select {
+    padding: 7px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .field input[type=color] { width: 100%; height: 34px; border: 1px solid var(--border); border-radius: 6px; padding: 2px; cursor: pointer; }
+  .field.checkbox { flex-direction: row; align-items: center; gap: 8px; }
+  .field.checkbox label { text-transform: none; font-size: 13px; }
+
+  .button-card {
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    grid-column: span 2;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    align-items: end;
+  }
+  .button-card .tag { grid-column: 1 / -1; font-size: 11px; font-weight: 800; color: var(--green-dark); text-transform: uppercase; }
+
+  .toolbar {
+    position: sticky;
+    bottom: 0;
+    background: rgba(244,244,244,0.95);
+    backdrop-filter: blur(4px);
+    padding: 14px 0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    border-top: 1px solid var(--border);
+  }
+  button.primary {
+    background: var(--green);
+    color: white;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button.primary:hover { background: var(--green-dark); }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--navy);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.25s ease;
+    pointer-events: none;
+    z-index: 50;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.err { background: #B91C1C; }
+  .loading-note { padding: 24px; text-align: center; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Driver POS — Screen Control Panel</h1>
+    <div class="sub">Live editor for the P18 app's backend-driven screens</div>
+  </div>
+  <div id="status"><span class="dot"></span><span id="status-text">Connecting…</span></div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="login">Login Screen</button>
+  <button class="tab-btn" data-tab="teesheet">Tee Sheet Screen</button>
+</div>
+
+<main>
+
+  <!-- ───────────────────────── LOGIN SCREEN ───────────────────────── -->
+  <div class="panel active" id="panel-login">
+    <div class="loading-note" id="login-loading">Loading current config…</div>
+    <form id="login-form" style="display:none">
+
+      <details class="section" open>
+        <summary>Background</summary>
+        <div class="body">
+          <div class="field"><label>Color</label><input type="color" data-path="background.color"></div>
+          <div class="field"><label>Blob color</label><input type="color" data-path="background.blobColor"></div>
+          <div class="field"><label>Blob opacity (0–1)</label><input type="number" step="0.05" min="0" max="1" data-path="background.blobOpacity"></div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>Card</summary>
+        <div class="body">
+          <div class="field"><label>Background</label><input type="color" data-path="card.background"></div>
+          <div class="field"><label>Border radius (px)</label><input type="number" data-path="card.borderRadius" data-px="true"></div>
+          <div class="field"><label>Padding top (px)</label><input type="number" data-path="card.paddingTop" data-px="true"></div>
+          <div class="field"><label>Padding bottom (px)</label><input type="number" data-path="card.paddingBottom" data-px="true"></div>
+          <div class="field"><label>Padding left (px)</label><input type="number" data-path="card.paddingLeft" data-px="true"></div>
+          <div class="field"><label>Padding right (px)</label><input type="number" data-path="card.paddingRight" data-px="true"></div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>Logo</summary>
+        <div class="body">
+          <div class="field"><label>Asset path</label><input type="text" data-path="logo.asset"></div>
+          <div class="field"><label>Height (px)</label><input type="number" data-path="logo.height" data-px="true"></div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>Heading text ("Welcome to driver.io")</summary>
+        <div class="body">
+          <div class="field"><label>Text</label><input type="text" data-path="headingText.text"></div>
+          <div class="field"><label>Color</label><input type="color" data-path="headingText.color"></div>
+          <div class="field"><label>Font size (px)</label><input type="number" data-path="headingText.fontSize" data-px="true"></div>
+          <div class="field"><label>Font weight</label>
+            <select data-path="headingText.fontWeight">
+              <option value="400">400</option><option value="500">500</option><option value="600">600</option>
+              <option value="700">700</option><option value="800">800</option><option value="900">900</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>Subtitle text ("Login to your account")</summary>
+        <div class="body">
+          <div class="field"><label>Text</label><input type="text" data-path="subtitleText.text"></div>
+          <div class="field"><label>Color</label><input type="color" data-path="subtitleText.color"></div>
+          <div class="field"><label>Font size (px)</label><input type="number" data-path="subtitleText.fontSize" data-px="true"></div>
+          <div class="field"><label>Font weight</label>
+            <select data-path="subtitleText.fontWeight">
+              <option value="400">400</option><option value="500">500</option><option value="600">600</option>
+              <option value="700">700</option><option value="800">800</option><option value="900">900</option>
+            </select>
+          </div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>Username field</summary>
+        <div class="body">
+          <div class="field"><label>Label</label><input type="text" data-path="usernameField.label"></div>
+          <div class="field"><label>Label color</label><input type="color" data-path="usernameField.labelColor"></div>
+          <div class="field"><label>Placeholder</label><input type="text" data-path="usernameField.placeholder"></div>
+          <div class="field"><label>Border color</label><input type="color" data-path="usernameField.borderColor"></div>
+          <div class="field"><label>Focus border color</label><input type="color" data-path="usernameField.focusBorderColor"></div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>Password field</summary>
+        <div class="body">
+          <div class="field"><label>Label</label><input type="text" data-path="passwordField.label"></div>
+          <div class="field"><label>Label color</label><input type="color" data-path="passwordField.labelColor"></div>
+          <div class="field"><label>Placeholder</label><input type="text" data-path="passwordField.placeholder"></div>
+          <div class="field"><label>Border color</label><input type="color" data-path="passwordField.borderColor"></div>
+          <div class="field"><label>Focus border color</label><input type="color" data-path="passwordField.focusBorderColor"></div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>Login button</summary>
+        <div class="body">
+          <div class="field"><label>Text</label><input type="text" data-path="loginButton.text"></div>
+          <div class="field"><label>Background</label><input type="color" data-path="loginButton.background"></div>
+          <div class="field"><label>Text color</label><input type="color" data-path="loginButton.textColor"></div>
+          <div class="field"><label>Font size (px)</label><input type="number" data-path="loginButton.fontSize" data-px="true"></div>
+          <div class="field"><label>Height (px)</label><input type="number" data-path="loginButton.height" data-px="true"></div>
+          <div class="field"><label>Border radius (px)</label><input type="number" data-path="loginButton.borderRadius" data-px="true"></div>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>Error text</summary>
+        <div class="body">
+          <div class="field"><label>Color</label><input type="color" data-path="errorText.color"></div>
+          <div class="field"><label>Font size (px)</label><input type="number" data-path="errorText.fontSize" data-px="true"></div>
+        </div>
+      </details>
+
+      <div class="toolbar">
+        <button type="button" class="primary" id="login-save">Save &amp; push live</button>
+        <button type="button" class="ghost" id="login-reload">Reload from server</button>
+        <span id="login-saved-note" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+    </form>
+  </div>
+
+  <!-- ───────────────────────── TEE SHEET SCREEN ───────────────────────── -->
+  <div class="panel" id="panel-teesheet">
+    <div class="loading-note" id="teesheet-loading">Loading current config…</div>
+    <form id="teesheet-form" style="display:none">
+
+      <details class="section" open>
+        <summary>Toolbar buttons</summary>
+        <div class="body" id="teesheet-buttons"><!-- generated --></div>
+      </details>
+
+      <details class="section" open>
+        <summary>Search bar</summary>
+        <div class="body">
+          <div class="field"><label>Placeholder</label><input type="text" data-path="search.placeholder"></div>
+          <div class="field checkbox"><input type="checkbox" id="search-enabled" data-path="search.enabled"><label for="search-enabled">Show search bar</label></div>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary>Column headers</summary>
+        <div class="body">
+          <div class="field"><label>"Time" column title</label><input type="text" data-path="columns.time"></div>
+          <div class="field"><label>"Front" column title</label><input type="text" data-path="columns.front"></div>
+        </div>
+      </details>
+
+      <div class="toolbar">
+        <button type="button" class="primary" id="teesheet-save">Save &amp; push live</button>
+        <button type="button" class="ghost" id="teesheet-reload">Reload from server</button>
+        <span id="teesheet-saved-note" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+    </form>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+const API_BASE = 'https://driverpos-backend-app.onrender.com/api/v1';
+const SOCKET_URL = 'https://driverpos-backend-app.onrender.com';
+
+const SCREENS = {
+  login: {
+    pageId: '6a2a4ad3ed800d7d3c7dbf26',
+    screenId: '6a392453ceb4138030e36f84',
+    screenKey: 'login-screen',
+  },
+  teesheet: {
+    pageId: '6a26b72321405419025471dc',
+    screenId: '6a26bba621405419025471dd',
+    screenKey: 'teeSheet-screen',
+  },
+};
+
+let currentData = { login: null, teesheet: null };
+let socket = null;
+let activeTab = 'login';
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, isErr) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('err', !!isErr);
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ── Generic nested get/set by dotted path ───────────────────────────────────
+function getPath(obj, path) {
+  return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
+}
+function setPath(obj, path, value) {
+  const keys = path.split('.');
+  let o = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (typeof o[keys[i]] !== 'object' || o[keys[i]] === null) o[keys[i]] = {};
+    o = o[keys[i]];
+  }
+  o[keys[keys.length - 1]] = value;
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    document.getElementById('panel-' + activeTab).classList.add('active');
+    subscribeSocket(activeTab);
+  });
+});
+
+// ── REST: fetch current screen doc ──────────────────────────────────────────
+async function fetchScreen(tab) {
+  const { pageId, screenKey } = SCREENS[tab];
+  const res = await fetch(`${API_BASE}/page/${pageId}`);
+  const body = await res.json();
+  const screens = body?.page?.screens || [];
+  let doc = screens.find(s => s.screenKey === screenKey);
+  if (!doc) return null;
+  // The teeSheet-screen doc was seen double-wrapped (data.data) from a past
+  // update — unwrap defensively so the form always sees the real fields.
+  let data = doc.data || {};
+  if (data.data && (data.data.buttons || data.data.search || data.data.columns)) {
+    data = data.data;
+  }
+  return data;
+}
+
+async function pushScreen(tab, data) {
+  const { pageId, screenKey, screenId } = SCREENS[tab];
+  const res = await fetch(`${API_BASE}/screen/update/${screenId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ screenKey, pageId, data, isVisible: true }),
+  });
+  if (!res.ok) throw new Error(`Save failed (${res.status})`);
+  return res.json();
+}
+
+// ── Socket: live status + confirmation ──────────────────────────────────────
+function setStatus(state, label) {
+  const el = document.getElementById('status');
+  el.className = state;
+  document.getElementById('status-text').textContent = label;
+}
+
+function connectSocket() {
+  setStatus('connecting', 'Connecting…');
+  socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+  socket.on('connect', () => {
+    setStatus('connected', 'Live');
+    subscribeSocket(activeTab);
+  });
+  socket.on('disconnect', () => setStatus('error', 'Disconnected'));
+  socket.on('connect_error', () => setStatus('error', 'Connection error'));
+  socket.on('screen:update', (payload) => {
+    const doc = payload?.data;
+    if (!doc) return;
+    if (doc.screenKey === SCREENS.login.screenKey || doc.screenKey === SCREENS.teesheet.screenKey) {
+      toast(`Update confirmed on "${doc.screenKey}" — now live on the app`);
+    }
+  });
+}
+
+function subscribeSocket(tab) {
+  if (!socket || !socket.connected) return;
+  socket.emit('subscribe', { screenKey: SCREENS[tab].screenKey });
+}
+
+// ── Login form ───────────────────────────────────────────────────────────────
+function fillForm(formEl, data) {
+  formEl.querySelectorAll('[data-path]').forEach(input => {
+    const raw = getPath(data, input.dataset.path);
+    if (raw === undefined) return;
+    if (input.type === 'checkbox') {
+      input.checked = !!raw;
+    } else if (input.dataset.px) {
+      input.value = String(raw).replace('px', '');
+    } else {
+      input.value = raw;
+    }
+  });
+}
+
+function readForm(formEl, data) {
+  const out = JSON.parse(JSON.stringify(data || {}));
+  formEl.querySelectorAll('[data-path]').forEach(input => {
+    let value;
+    if (input.type === 'checkbox') {
+      value = input.checked;
+    } else if (input.dataset.px) {
+      value = `${input.value}px`;
+    } else if (input.type === 'number') {
+      value = parseFloat(input.value);
+    } else {
+      value = input.value;
+    }
+    setPath(out, input.dataset.path, value);
+  });
+  return out;
+}
+
+async function loadLogin() {
+  document.getElementById('login-loading').style.display = 'block';
+  document.getElementById('login-form').style.display = 'none';
+  try {
+    const data = await fetchScreen('login');
+    currentData.login = data || {};
+    fillForm(document.getElementById('login-form'), currentData.login);
+    document.getElementById('login-loading').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+  } catch (e) {
+    document.getElementById('login-loading').textContent = 'Failed to load: ' + e.message;
+  }
+}
+
+document.getElementById('login-save').addEventListener('click', async () => {
+  const btn = document.getElementById('login-save');
+  btn.disabled = true;
+  try {
+    const data = readForm(document.getElementById('login-form'), currentData.login);
+    await pushScreen('login', data);
+    currentData.login = data;
+    document.getElementById('login-saved-note').textContent = 'Saved at ' + new Date().toLocaleTimeString();
+    toast('Login screen saved — pushing to app…');
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+document.getElementById('login-reload').addEventListener('click', loadLogin);
+
+// ── Tee sheet form ───────────────────────────────────────────────────────────
+function renderTeeSheetButtons(buttons) {
+  const wrap = document.getElementById('teesheet-buttons');
+  wrap.innerHTML = '';
+  buttons.forEach((btn, i) => {
+    const card = document.createElement('div');
+    card.className = 'button-card';
+    card.innerHTML = `
+      <div class="tag">${btn.key}</div>
+      <div class="field"><label>Label</label><input type="text" data-path="buttons.${i}.label" value="${btn.label || ''}"></div>
+      <div class="field"><label>Background</label><input type="color" data-path="buttons.${i}.bgColor" value="${btn.bgColor || '#ffffff'}"></div>
+      <div class="field"><label>Accent (border/text)</label><input type="color" data-path="buttons.${i}.accent" value="${btn.borderColor || btn.textColor || '#000000'}"></div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+async function loadTeeSheet() {
+  document.getElementById('teesheet-loading').style.display = 'block';
+  document.getElementById('teesheet-form').style.display = 'none';
+  try {
+    const data = await fetchScreen('teesheet');
+    currentData.teesheet = data || { buttons: [], search: {}, columns: [] };
+    renderTeeSheetButtons(currentData.teesheet.buttons || []);
+
+    const form = document.getElementById('teesheet-form');
+    form.querySelector('[data-path="search.placeholder"]').value = currentData.teesheet.search?.placeholder || '';
+    form.querySelector('[data-path="search.enabled"]').checked = currentData.teesheet.search?.enabled !== false;
+
+    const cols = currentData.teesheet.columns || [];
+    const timeCol = cols.find(c => c.key === 'time');
+    const frontCol = cols.find(c => c.key === 'front');
+    form.querySelector('[data-path="columns.time"]').value = timeCol?.title || 'Time';
+    form.querySelector('[data-path="columns.front"]').value = frontCol?.title || 'Front';
+
+    document.getElementById('teesheet-loading').style.display = 'none';
+    form.style.display = 'block';
+  } catch (e) {
+    document.getElementById('teesheet-loading').textContent = 'Failed to load: ' + e.message;
+  }
+}
+
+function readTeeSheetForm() {
+  const base = JSON.parse(JSON.stringify(currentData.teesheet || {}));
+  const form = document.getElementById('teesheet-form');
+
+  const buttons = (base.buttons || []).map((btn, i) => {
+    const label = form.querySelector(`[data-path="buttons.${i}.label"]`)?.value ?? btn.label;
+    const bg = form.querySelector(`[data-path="buttons.${i}.bgColor"]`)?.value ?? btn.bgColor;
+    const accent = form.querySelector(`[data-path="buttons.${i}.accent"]`)?.value ?? (btn.borderColor || btn.textColor);
+    // borderColor/textColor/hoverColor share one accent value on the backend.
+    return { ...btn, label, bgColor: bg, borderColor: accent, textColor: accent, hoverColor: accent };
+  });
+
+  const search = {
+    ...(base.search || {}),
+    placeholder: form.querySelector('[data-path="search.placeholder"]').value,
+    enabled: form.querySelector('[data-path="search.enabled"]').checked,
+  };
+
+  const timeTitle = form.querySelector('[data-path="columns.time"]').value;
+  const frontTitle = form.querySelector('[data-path="columns.front"]').value;
+  const columns = (base.columns || []).map(c => {
+    if (c.key === 'time') return { ...c, title: timeTitle };
+    if (c.key === 'front') return { ...c, title: frontTitle };
+    return c; // leave the malformed "back" entry untouched
+  });
+
+  return { ...base, buttons, search, columns };
+}
+
+document.getElementById('teesheet-save').addEventListener('click', async () => {
+  const btn = document.getElementById('teesheet-save');
+  btn.disabled = true;
+  try {
+    const data = readTeeSheetForm();
+    await pushScreen('teesheet', data);
+    currentData.teesheet = data;
+    document.getElementById('teesheet-saved-note').textContent = 'Saved at ' + new Date().toLocaleTimeString();
+    toast('Tee sheet screen saved — pushing to app…');
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+document.getElementById('teesheet-reload').addEventListener('click', loadTeeSheet);
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+connectSocket();
+loadLogin();
+loadTeeSheet();
+</script>
+</body>
+</html>

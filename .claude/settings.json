@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(jsx?|tsx?\\)$\")",
+      "Bash(ipconfig getifaddr *)",
+      "Bash(awk '{print $2}')",
+      "Bash(curl -s --connect-timeout 3 http://localhost:5050/health)",
+      "Bash(curl -s --connect-timeout 3 http://localhost:5050/)",
+      "Bash(adb -s \"adb-1532A7326020200122-3axuh9._adb-tls-connect._tcp\" install -r build/app/outputs/flutter-apk/app-release.apk)",
+      "Bash(adb -s \"adb-1532A7326020200122-3axuh9._adb-tls-connect._tcp\" shell am start -n \"com.example.golf_pos_app/com.example.golf_pos_app.MainActivity\")",
+      "Bash(adb -s \"adb-1532A7326020200122-3axuh9._adb-tls-connect._tcp\" shell pm list packages)",
+      "Bash(adb -s \"adb-1532A7326020200122-3axuh9._adb-tls-connect._tcp\" shell monkey -p com.driverpos.golf_pos_app -c android.intent.category.LAUNCHER 1)",
+      "Bash(npm --version)",
+      "Bash(cp \"/Users/maulik/Downloads/golf_pos_app/.env\" \"/Users/maulik/Downloads/golfpro-backend-main 2/.env\" && echo \"Copied\")",
+      "Bash(command -v nvm)",
+      "Bash(nvm list *)",
+      "Read(//Users/maulik/.nvm/versions/**)",
+      "Read(//opt/homebrew/opt/**)",
+      "Bash(brew list *)",
+      "Bash(npm ls *)",
+      "Bash(curl -s http://localhost:5050/health)",
+      "Bash(curl -s http://localhost:5050/)",
+      "Bash(curl -s -X POST http://localhost:5050/api/v1/auth/login?role=workStation -H 'Content-Type: application/json' -d '{\"email\":\"tonystark\",\"password\":\"Partnership2025!\",\"timeZone\":\"UTC\",\"anonymous\":false}')",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('count:', len\\(d.get\\('data',[]\\)\\)\\)\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('count:', len\\(d.get\\('data',[]\\)\\)\\); [print\\(' -', x.get\\('name'\\), '| dept:', x.get\\('department'\\)\\) for x in d.get\\('data',[]\\)]\")",
+      "Bash(python3 -c ' *)",
+      "Bash(find \"/Users/maulik\" -maxdepth 4 -type d \\\\\\( -name \"node_modules\" -prune \\\\\\) -o -type f \\\\\\( -name \"*.jsx\" -o -name \"*.tsx\" \\\\\\) -print 2>/dev/null | grep -v node_modules | xargs grep -l \"triggerEvent\\\\|pendingReservation\\\\|socket\" 2>/dev/null | head -10)",
+      "Read(//Users/maulik/**)",
+      "Bash(echo \"PID: $!\")",
+      "Bash(jobs -l)",
+      "Bash(adb -s \"adb-1532A7326020200122-3axuh9 \\(2\\)._adb-tls-connect._tcp\" get-state)",
+      "Bash(rm -rf dvpay_inspect)",
+      "Bash(mkdir dvpay_inspect)",
+      "Bash(cp /Users/maulik/.gradle/caches/modules-2/files-2.1/com.denovo/invoke-dvpay-lite/1.2.1.3/5872739f529378ace7eb3b4bf26d7d1b457edbba/invoke-dvpay-lite-1.2.1.3.aar .)",
+      "Bash(unzip -o invoke-dvpay-lite-1.2.1.3.aar -d dvpay_inspect/)",
+      "Bash(unzip -o classes.jar -d classes_extracted/)",
+      "Bash(adb pair *)"
+    ],
+    "additionalDirectories": [
+      "/Users/maulik/Downloads/golfpro-backend-main 2"
+    ]
+  }
+}

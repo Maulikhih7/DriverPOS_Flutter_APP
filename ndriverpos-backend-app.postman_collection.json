@@ -1,0 +1,650 @@
+{
+  "info": {
+    "_postman_id": "e6e10ef4-9c68-44eb-8a08-755103bf0c4a",
+    "name": "driverpos-backend-app",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "19103671",
+    "_collection_link": "https://go.postman.co/collection/19103671-e6e10ef4-9c68-44eb-8a08-755103bf0c4a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Page",
+      "item": [
+        {
+          "name": "Create page",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"pageKey\": \"Test-pages\",\r\n    \"title\": \"Test-pages\",\r\n    \"screens\": []\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/page/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "page",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get page all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/page/all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "page",
+                "all"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get page all",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/page/all",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "page",
+                    "all"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 08 Jun 2026 10:04:02 GMT"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "content-length",
+                  "value": "212"
+                },
+                {
+                  "key": "access-control-allow-credentials",
+                  "value": "true"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "content-encoding",
+                  "value": "br"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"12f-DcC3VZLg+aU3mJvomsX2NJ1Mkgw\""
+                },
+                {
+                  "key": "rndr-id",
+                  "value": "f63a6681-74dc-4673"
+                },
+                {
+                  "key": "server",
+                  "value": "cloudflare"
+                },
+                {
+                  "key": "vary",
+                  "value": "Accept-Encoding"
+                },
+                {
+                  "key": "x-powered-by",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-render-origin-server",
+                  "value": "Render"
+                },
+                {
+                  "key": "cf-cache-status",
+                  "value": "DYNAMIC"
+                },
+                {
+                  "key": "cf-ray",
+                  "value": "a08711ef28d16b93-CCU"
+                },
+                {
+                  "key": "alt-svc",
+                  "value": "h3=\":443\"; ma=86400"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Pages fetched successfully\",\n    \"pages\": [\n        {\n            \"_id\": \"6a214e88dc56b4089e489620\",\n            \"pageKey\": \"Test-pages\",\n            \"title\": \"Test-pages\",\n            \"screens\": [\n                \"6a214fbbae5cab90e97b3a99\"\n            ],\n            \"isActive\": true,\n            \"isDeleted\": false,\n            \"createdAt\": \"2026-06-04T10:08:08.397Z\",\n            \"updatedAt\": \"2026-06-05T12:44:50.202Z\",\n            \"__v\": 7\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "get page by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/page/:pageId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "page",
+                ":pageId"
+              ],
+              "variable": [
+                {
+                  "key": "pageId",
+                  "value": "6a214e88dc56b4089e489620"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get page by id",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/page/:pageId",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "page",
+                    ":pageId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "pageId",
+                      "value": "6a214e88dc56b4089e489620"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 08 Jun 2026 10:04:22 GMT"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "content-length",
+                  "value": "348"
+                },
+                {
+                  "key": "access-control-allow-credentials",
+                  "value": "true"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "content-encoding",
+                  "value": "br"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"282-Ftv27gEV6cW3szQeHwWsXoc00q4\""
+                },
+                {
+                  "key": "rndr-id",
+                  "value": "6bb916db-0b13-4b8d"
+                },
+                {
+                  "key": "server",
+                  "value": "cloudflare"
+                },
+                {
+                  "key": "vary",
+                  "value": "Accept-Encoding"
+                },
+                {
+                  "key": "x-powered-by",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-render-origin-server",
+                  "value": "Render"
+                },
+                {
+                  "key": "cf-cache-status",
+                  "value": "DYNAMIC"
+                },
+                {
+                  "key": "cf-ray",
+                  "value": "a087126d18a36b93-CCU"
+                },
+                {
+                  "key": "alt-svc",
+                  "value": "h3=\":443\"; ma=86400"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Page fetched successfully\",\n    \"page\": {\n        \"_id\": \"6a214e88dc56b4089e489620\",\n        \"pageKey\": \"Test-pages\",\n        \"title\": \"Test-pages\",\n        \"screens\": [\n            {\n                \"_id\": \"6a214fbbae5cab90e97b3a99\",\n                \"screenKey\": \"main-screen\",\n                \"pageId\": \"6a214e88dc56b4089e489620\",\n                \"data\": {\n                    \"fontSize\": \"48px\",\n                    \"color\": \"#ffffff\",\n                    \"fontFamily\": \"Georgia, serif\",\n                    \"background\": \"red\",\n                    \"fontWeight\": \"bold\",\n                    \"textAlign\": \"center\",\n                    \"padding\": \"30px\"\n                },\n                \"isVisible\": true,\n                \"isDeleted\": false,\n                \"createdAt\": \"2026-06-04T10:13:15.756Z\",\n                \"updatedAt\": \"2026-06-08T05:25:30.929Z\",\n                \"__v\": 0\n            }\n        ],\n        \"isActive\": true,\n        \"isDeleted\": false,\n        \"createdAt\": \"2026-06-04T10:08:08.397Z\",\n        \"updatedAt\": \"2026-06-05T12:44:50.202Z\",\n        \"__v\": 7\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "update Page",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"pageKey\": \"loginPage\",\r\n  \"title\": \"Login Page\",\r\n  \"screens\": [\r\n    \"6a056d8175eb8e1573610d57\",\r\n    \"6a0568b275eb8e1573610d54\",\r\n    \"6a056f4475eb8e1573610d58\",\r\n    \"6a056add75eb8e1573610d56\",\r\n    \"6a0569aa75eb8e1573610d55\"\r\n  ]\r\n\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/page/update/6a0449096f2e6816c4c74fe4",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "page",
+                "update",
+                "6a0449096f2e6816c4c74fe4"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Screen",
+      "item": [
+        {
+          "name": "create screen",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"screenKey\": \"main2-screen\",\r\n    \"pageId\": \"6a214e88dc56b4089e489620\",\r\n    \"data\": {\r\n        \"fontSize\": \"48px\",\r\n        \"color\": \"#ffffff\",\r\n        \"fontFamily\": \"Georgia, serif\",\r\n        \"background\": \"green\",\r\n        \"fontWeight\": \"bold\",\r\n        \"textAlign\": \"center\",\r\n        \"padding\": \"30px\"\r\n    },\r\n    \"isVisible\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/screen/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "screen",
+                "create"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update screen",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"screenKey\": \"login-screen\",\r\n    \"pageId\": \"6a2a4ad3ed800d7d3c7dbf26\",\r\n    \"data\": {\r\n        \"background\": {\r\n            \"color\": \"#EBF3E9\",\r\n            \"blobColor\": \"#B5D4AF\",\r\n            \"blobOpacity\": 0.45\r\n        },\r\n        \"card\": {\r\n            \"background\": \"#FFFFFF\",\r\n            \"borderRadius\": \"20px\",\r\n            \"paddingTop\": \"40px\",\r\n            \"paddingBottom\": \"40px\",\r\n            \"paddingLeft\": \"36px\",\r\n            \"paddingRight\": \"36px\",\r\n            \"shadowColor\": \"#00000014\",\r\n            \"shadowBlur\": \"32px\"\r\n        },\r\n        \"logo\": {\r\n            \"asset\": \"assets/images/login_logo.png\",\r\n            \"height\": \"80px\"\r\n        },\r\n        \"subtitleText\": {\r\n            \"text\": \"Login2 into your account\",\r\n            \"fontSize\": \"14px\",\r\n            \"fontWeight\": \"500\",\r\n            \"color\": \"#141414\",\r\n            \"textAlign\": \"center\"\r\n        },\r\n        \"headingText\": {\r\n            \"text\": \"Welcome to driver.io\",\r\n            \"fontSize\": \"26px\",\r\n            \"fontWeight\": \"800\",\r\n            \"color\": \"#244065\",\r\n            \"textAlign\": \"center\"\r\n        },\r\n        \"usernameField\": {\r\n            \"label\": \"User Name / Email\",\r\n            \"labelColor\": \"#7FB069\",\r\n            \"labelFontSize\": \"14px\",\r\n            \"labelFontWeight\": \"600\",\r\n            \"placeholder\": \"Enter your user name or email id\",\r\n            \"placeholderColor\": \"#6B7280\",\r\n            \"borderColor\": \"#E5E7EB\",\r\n            \"borderRadius\": \"10px\",\r\n            \"focusBorderColor\": \"#7FB069\",\r\n            \"background\": \"#FFFFFF\",\r\n            \"fontSize\": \"14px\"\r\n        },\r\n        \"passwordField\": {\r\n            \"label\": \"Password\",\r\n            \"labelColor\": \"#7FB069\",\r\n            \"labelFontSize\": \"14px\",\r\n            \"labelFontWeight\": \"600\",\r\n            \"placeholder\": \"Enter Password\",\r\n            \"placeholderColor\": \"#6B7280\",\r\n            \"borderColor\": \"#E5E7EB\",\r\n            \"borderRadius\": \"10px\",\r\n            \"focusBorderColor\": \"#7FB069\",\r\n            \"background\": \"#FFFFFF\",\r\n            \"fontSize\": \"14px\",\r\n            \"showToggleIcon\": true,\r\n            \"toggleIconColor\": \"#6B7280\"\r\n        },\r\n        \"loginButton\": {\r\n            \"text\": \"Login\",\r\n            \"background\": \"#7FB069\",\r\n            \"textColor\": \"#FFFFFF\",\r\n            \"fontSize\": \"16px\",\r\n            \"fontWeight\": \"700\",\r\n            \"height\": \"52px\",\r\n            \"borderRadius\": \"10px\",\r\n            \"width\": \"100%\"\r\n        },\r\n        \"errorText\": {\r\n            \"color\": \"#C01C2D\",\r\n            \"fontSize\": \"13px\",\r\n            \"fontWeight\": \"500\"\r\n        }\r\n    },\r\n    \"isVisible\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/screen/update/6a2a4ad3ed800d7d3c7dbf26",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "screen",
+                "update",
+                "6a2a4ad3ed800d7d3c7dbf26"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "get all Screen",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/screen/getAll",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "screen",
+                "getAll"
+              ],
+              "query": [
+                {
+                  "key": "screenKey",
+                  "value": "main-screen",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get all Screen",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/screen/getAll",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "screen",
+                    "getAll"
+                  ],
+                  "query": [
+                    {
+                      "key": "screenKey",
+                      "value": "main-screen",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 08 Jun 2026 10:05:12 GMT"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "content-length",
+                  "value": "292"
+                },
+                {
+                  "key": "access-control-allow-credentials",
+                  "value": "true"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "content-encoding",
+                  "value": "br"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"1b4-UnlUFioiknjYr8hSv+lz8og+4ao\""
+                },
+                {
+                  "key": "rndr-id",
+                  "value": "08acd704-b511-4625"
+                },
+                {
+                  "key": "server",
+                  "value": "cloudflare"
+                },
+                {
+                  "key": "vary",
+                  "value": "Accept-Encoding"
+                },
+                {
+                  "key": "x-powered-by",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-render-origin-server",
+                  "value": "Render"
+                },
+                {
+                  "key": "cf-cache-status",
+                  "value": "DYNAMIC"
+                },
+                {
+                  "key": "cf-ray",
+                  "value": "a08713a7ad386b93-CCU"
+                },
+                {
+                  "key": "alt-svc",
+                  "value": "h3=\":443\"; ma=86400"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"message\": \"Screens fetched successfully\",\n    \"data\": [\n        {\n            \"_id\": \"6a214fbbae5cab90e97b3a99\",\n            \"screenKey\": \"main-screen\",\n            \"pageId\": \"6a214e88dc56b4089e489620\",\n            \"data\": {\n                \"fontSize\": \"48px\",\n                \"color\": \"#ffffff\",\n                \"fontFamily\": \"Georgia, serif\",\n                \"background\": \"red\",\n                \"fontWeight\": \"bold\",\n                \"textAlign\": \"center\",\n                \"padding\": \"30px\"\n            },\n            \"isVisible\": true,\n            \"isDeleted\": false,\n            \"createdAt\": \"2026-06-04T10:13:15.756Z\",\n            \"updatedAt\": \"2026-06-08T05:25:30.929Z\",\n            \"__v\": 0\n        }\n    ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "get screen by id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/screen/:screenId",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "screen",
+                ":screenId"
+              ],
+              "variable": [
+                {
+                  "key": "screenId",
+                  "value": "6a214fbbae5cab90e97b3a99"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "get screen by id",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/screen/:screenId",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "screen",
+                    ":screenId"
+                  ],
+                  "variable": [
+                    {
+                      "key": "screenId",
+                      "value": "6a214fbbae5cab90e97b3a99"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "Text",
+              "header": [
+                {
+                  "key": ":status",
+                  "value": 200
+                },
+                {
+                  "key": "date",
+                  "value": "Mon, 08 Jun 2026 10:05:19 GMT"
+                },
+                {
+                  "key": "content-type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "content-length",
+                  "value": "288"
+                },
+                {
+                  "key": "access-control-allow-credentials",
+                  "value": "true"
+                },
+                {
+                  "key": "access-control-allow-origin",
+                  "value": "*"
+                },
+                {
+                  "key": "content-encoding",
+                  "value": "br"
+                },
+                {
+                  "key": "etag",
+                  "value": "W/\"1bd-ferzpOtGZKZR3XKNjZuimcDRgUM\""
+                },
+                {
+                  "key": "rndr-id",
+                  "value": "977d2db6-47f2-4d67"
+                },
+                {
+                  "key": "server",
+                  "value": "cloudflare"
+                },
+                {
+                  "key": "vary",
+                  "value": "Accept-Encoding"
+                },
+                {
+                  "key": "x-powered-by",
+                  "value": "Express"
+                },
+                {
+                  "key": "x-render-origin-server",
+                  "value": "Render"
+                },
+                {
+                  "key": "cf-cache-status",
+                  "value": "DYNAMIC"
+                },
+                {
+                  "key": "cf-ray",
+                  "value": "a08713d04a6b6b93-CCU"
+                },
+                {
+                  "key": "alt-svc",
+                  "value": "h3=\":443\"; ma=86400"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"success\": true,\n    \"data\": {\n        \"_id\": \"6a214fbbae5cab90e97b3a99\",\n        \"screenKey\": \"main-screen\",\n        \"pageId\": {\n            \"_id\": \"6a214e88dc56b4089e489620\",\n            \"pageKey\": \"Test-pages\",\n            \"title\": \"Test-pages\"\n        },\n        \"data\": {\n            \"fontSize\": \"48px\",\n            \"color\": \"#ffffff\",\n            \"fontFamily\": \"Georgia, serif\",\n            \"background\": \"red\",\n            \"fontWeight\": \"bold\",\n            \"textAlign\": \"center\",\n            \"padding\": \"30px\"\n        },\n        \"isVisible\": true,\n        \"isDeleted\": false,\n        \"createdAt\": \"2026-06-04T10:13:15.756Z\",\n        \"updatedAt\": \"2026-06-08T05:25:30.929Z\",\n        \"__v\": 0\n    }\n}"
+            }
+          ]
+        },
+        {
+          "name": "delete screen",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"screenKey\": \"testScreen\",\r\n    \"pageId\": \"\",\r\n    \"data\": {\r\n        \"heading\": \"test !\",\r\n        \"subHeading\": \"Test ... \",\r\n        \"buttons\": [\r\n            {\r\n                \"text\": \"test\",\r\n                \"color\": \"#2563EB\"\r\n            }\r\n        ]\r\n    }\r\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/screen/delete/6a22b33174e807aef9a807ed",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "screen",
+                "delete",
+                "6a22b33174e807aef9a807ed"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    }
+  ]
+}
