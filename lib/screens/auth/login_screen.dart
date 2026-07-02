@@ -14,14 +14,33 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
 
+  late final AnimationController _entranceCtrl;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _fade  = CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut));
+    _entranceCtrl.forward();
+  }
+
   @override
   void dispose() {
+    _entranceCtrl.dispose();
     _emailCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
@@ -35,9 +54,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _passCtrl.text,
         );
     if (!mounted) return;
-    if (ok) {
-      context.go('/pos');
-    } else {
+    if (!ok) {
       final pending = ref.read(authProvider).pendingPasswordChangeEmail;
       if (pending != null) _showChangePasswordDialog(pending);
     }
@@ -84,7 +101,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-                    _buildCard(authState, configState),
+                    FadeTransition(
+                      opacity: _fade,
+                      child: SlideTransition(
+                        position: _slide,
+                        child: _buildCard(authState, configState),
+                      ),
+                    ),
                   ],
                 ),
               ),

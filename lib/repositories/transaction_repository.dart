@@ -155,7 +155,7 @@ class TransactionRepository {
 
   /// POST /transaction/issue-refund/:id
   Future<void> issueRefundFromTransaction(String transactionId) async {
-    await _client.post('${ApiConstants.issueRefund}/$transactionId');
+    await _client.post('${ApiConstants.issueRefund}/$transactionId', data: <String, dynamic>{});
   }
 
   /// POST /transaction/sendOtp
@@ -210,7 +210,7 @@ class TransactionRepository {
   }
 
   Future<void> voidTransaction(String id) async {
-    await _client.post('${ApiConstants.voidTransaction}/$id');
+    await _client.post('${ApiConstants.voidTransaction}/$id', data: <String, dynamic>{});
   }
 
   Future<void> emailReceipt({

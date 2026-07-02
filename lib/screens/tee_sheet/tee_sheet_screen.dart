@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../core/theme/app_animations.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/tee_sheet_model.dart';
 import '../../models/tee_sheet_page_config.dart';
@@ -137,6 +139,9 @@ class _TeeSheetViewState extends ConsumerState<_TeeSheetView> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
 
+  // Row height scale (compact / comfortable / expanded)
+  double _rowHeight = 54.0;
+
   @override
   void initState() {
     super.initState();
@@ -211,9 +216,7 @@ class _TeeSheetViewState extends ConsumerState<_TeeSheetView> {
         // Slot rows
         Expanded(
           child: slotsAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: Color(0xFF9ECF9A)),
-            ),
+            loading: () => _TeeSheetShimmerLoading(),
             error: (e, _) => Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -252,7 +255,7 @@ class _TeeSheetViewState extends ConsumerState<_TeeSheetView> {
                   : rows
                         .where(
                           (r) =>
-                              r.frontBooking.any(
+                              ((_activeButton == 'toggleBack') ? r.backBooking : r.frontBooking).any(
                                 (e) => e.customer.toLowerCase().contains(
                                   _searchQuery,
                                 ),
@@ -284,24 +287,40 @@ class _TeeSheetViewState extends ConsumerState<_TeeSheetView> {
               }
 
               final sheet = ref.read(selectedTeeSheetProvider)!;
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFFD9D9D9)),
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
+              return RefreshIndicator(
+                color: const Color(0xFF9ECF9A),
+                strokeWidth: 2.5,
+                onRefresh: () async {
+                  ref.invalidate(teeSheetSlotsProvider);
+                  await Future.any([
+                    ref.read(teeSheetSlotsProvider.future).then((_) {}).catchError((_) {}),
+                    Future.delayed(const Duration(seconds: 5)),
+                  ]);
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: const Color(0xFFD9D9D9)),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(12),
+                      bottomRight: Radius.circular(12),
+                    ),
                   ),
-                ),
-                child: ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (_, i) => _TeeTimeRow(
-                    row: filtered[i],
-                    sheet: sheet,
-                    date: DateFormat('yyyy-MM-dd').format(date),
-                    isEven: i.isEven,
-                    isLast: i == filtered.length - 1,
+                  child: ListView.builder(
+                    itemCount: filtered.length,
+                    itemBuilder: (_, i) => _StaggeredRow(
+                      index: i,
+                      child: _TeeTimeRow(
+                        row: filtered[i],
+                        sheet: sheet,
+                        date: DateFormat('yyyy-MM-dd').format(date),
+                        showBack: (_activeButton == 'toggleBack'),
+                        isEven: i.isEven,
+                        isLast: i == filtered.length - 1,
+                        rowHeight: _rowHeight,
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -404,6 +423,20 @@ class _TeeSheetViewState extends ConsumerState<_TeeSheetView> {
           Container(width: 1, height: 24, color: const Color(0xFFA8CE9F)),
           const SizedBox(width: 8),
 
+          // Row height controls
+          _iconBtnAction(
+            Icons.remove_rounded,
+            'Compact rows',
+            onTap: () => setState(() => _rowHeight = (_rowHeight - 10).clamp(36.0, 100.0)),
+          ),
+          const SizedBox(width: 2),
+          _iconBtnAction(
+            Icons.add_rounded,
+            'Expand rows',
+            onTap: () => setState(() => _rowHeight = (_rowHeight + 10).clamp(36.0, 100.0)),
+          ),
+          const SizedBox(width: 8),
+
           Container(
             width: 36,
             height: 36,
@@ -445,6 +478,22 @@ class _TeeSheetViewState extends ConsumerState<_TeeSheetView> {
             color: isActive ? button.accent : const Color(0xFF6B7280),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _iconBtnAction(IconData icon, String tooltip, {required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 30,
+        height: 30,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Icon(icon, size: 16, color: const Color(0xFF6B7280)),
       ),
     );
   }
@@ -505,26 +554,7 @@ class _TeeSheetViewState extends ConsumerState<_TeeSheetView> {
               height: 36,
               alignment: Alignment.center,
               child: Text(
-                config.frontColumnTitle,
-                style: GoogleFonts.nunito(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-          Container(
-            width: 1,
-            height: 20,
-            color: Colors.white.withValues(alpha: 0.35),
-          ),
-          Expanded(
-            child: Container(
-              height: 36,
-              alignment: Alignment.center,
-              child: Text(
-                config.backColumnTitle,
+                (_activeButton == 'toggleBack') ? config.backColumnTitle : config.frontColumnTitle,
                 style: GoogleFonts.nunito(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -545,10 +575,21 @@ class _DateBar extends ConsumerWidget {
   final DateTime date;
   const _DateBar({required this.date});
 
+  void _stepDate(WidgetRef ref, int days) {
+    ref.read(selectedDateProvider.notifier).state =
+        date.add(Duration(days: days));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final fmt = DateFormat('EEE, MMM dd, yyyy');
-    return Container(
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        final v = details.primaryVelocity ?? 0;
+        if (v < -400) _stepDate(ref, 1);   // swipe left → next day
+        if (v > 400) _stepDate(ref, -1);   // swipe right → prev day
+      },
+      child: Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       child: Row(
@@ -636,7 +677,7 @@ class _DateBar extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ));  // closes GestureDetector > child: Container
   }
 }
 
@@ -646,16 +687,30 @@ class _TeeTimeRow extends ConsumerWidget {
   final TeeTimeRow row;
   final TeeSheetInfo sheet;
   final String date;
+  final bool showBack;
   final bool isEven;
   final bool isLast;
+  final double rowHeight;
 
   const _TeeTimeRow({
     required this.row,
     required this.sheet,
     required this.date,
+    required this.showBack,
     required this.isEven,
     required this.isLast,
+    this.rowHeight = 54,
   });
+
+  Color _statusStrip(List<TeeSlotEntry> entries) {
+    if (row.isBlock) return const Color(0xFFE53935);
+    if (entries.isEmpty) return const Color(0xFFD1D5DB);
+    final hasPending = entries.any((e) => e.isPending);
+    if (hasPending) return const Color(0xFFF59E0B);
+    final hasPaid = entries.any((e) => e.checkedIn);
+    if (hasPaid) return const Color(0xFF244065);
+    return const Color(0xFF22C55E);
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -664,12 +719,25 @@ class _TeeTimeRow extends ConsumerWidget {
     // No row-level tap target — matches the web, where the Time column has
     // no click behavior of its own. Each booking capsule and the leftover
     // empty space are individually tappable (see _buildBookingArea).
+    final totalCount = showBack ? row.backCount : row.frontCount;
+    final allowNewBooking = !showBack;
+
+    final entries = showBack ? row.backBooking : row.frontBooking;
+    final stripColor = _statusStrip(entries);
+
     return Row(
       children: [
+        // Status strip
+        Container(
+          width: 4,
+          height: rowHeight,
+          color: stripColor,
+        ),
+
         // Time column
         Container(
-          width: 68,
-          height: 54,
+          width: 64,
+          height: rowHeight,
           alignment: Alignment.center,
           decoration: BoxDecoration(
             border: Border(
@@ -700,32 +768,31 @@ class _TeeTimeRow extends ConsumerWidget {
                 row.isBlock ? 'Block' : '${row.count}/5',
                 style: const TextStyle(fontSize: 8, color: AppColors.textMuted),
               ),
+              if (entries.isNotEmpty && rowHeight >= 44) ...[
+                const SizedBox(height: 3),
+                _MiniAvatarRow(entries: entries),
+              ],
             ],
           ),
         ),
 
-        // Front booking content column
+        // Single full-width booking column (Front or Back)
         Expanded(
           child: Container(
-            height: 54,
+            height: rowHeight,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
               color: row.isBlock ? const Color(0xFFFFEBEE) : Colors.transparent,
               border: Border(
-                right: const BorderSide(color: Color(0xFFD9D9D9)),
                 bottom: isLast
                     ? BorderSide.none
                     : const BorderSide(color: Color(0xFFD9D9D9)),
               ),
             ),
-            child: row.isBlock
+            child: row.isBlock && !showBack
                 ? Row(
                     children: [
-                      const Icon(
-                        Icons.block,
-                        size: 14,
-                        color: AppColors.danger,
-                      ),
+                      const Icon(Icons.block, size: 14, color: AppColors.danger),
                       const SizedBox(width: 6),
                       Text(
                         row.blockName ?? 'Blocked',
@@ -740,41 +807,9 @@ class _TeeTimeRow extends ConsumerWidget {
                 : _buildBookingArea(
                     context,
                     ref,
-                    entries: row.frontBooking,
-                    totalCount: row.frontCount,
-                    allowNewBooking: true,
-                  ),
-          ),
-        ),
-
-        // Back booking content column — derived from other bookings' turn
-        // time, not independently bookable, so there's no "new booking"
-        // affordance here, only editing an existing back-9 group.
-        Expanded(
-          child: Container(
-            height: 54,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: isLast
-                    ? BorderSide.none
-                    : const BorderSide(color: Color(0xFFD9D9D9)),
-              ),
-            ),
-            child: row.backBooking.isEmpty
-                ? Text(
-                    '—',
-                    style: GoogleFonts.nunito(
-                      color: AppColors.border,
-                      fontSize: 12,
-                    ),
-                  )
-                : _buildBookingArea(
-                    context,
-                    ref,
-                    entries: row.backBooking,
-                    totalCount: row.backCount,
-                    allowNewBooking: false,
+                    entries: entries,
+                    totalCount: totalCount,
+                    allowNewBooking: allowNewBooking,
                   ),
           ),
         ),
@@ -916,6 +951,61 @@ class _TeeTimeRow extends ConsumerWidget {
       date: date,
       existingEntries: entries,
       existingCount: count,
+    );
+  }
+}
+
+// ── Mini avatar row (shown in time column) ────────────────────────────────────
+
+class _MiniAvatarRow extends StatelessWidget {
+  final List<TeeSlotEntry> entries;
+  const _MiniAvatarRow({required this.entries});
+
+  static const _colors = [
+    Color(0xFF5C6BC0),
+    Color(0xFF26A69A),
+    Color(0xFFEF6C00),
+    Color(0xFF8E24AA),
+    Color(0xFFD81B60),
+  ];
+
+  String _initial(String name) {
+    final trimmed = name.trim();
+    return trimmed.isEmpty ? '?' : trimmed[0].toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final count = entries.length.clamp(0, 4);
+    return SizedBox(
+      height: 14,
+      width: (count * 10 + 4).toDouble(),
+      child: Stack(
+        children: [
+          for (var i = 0; i < count; i++)
+            Positioned(
+              left: i * 10.0,
+              child: Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: _colors[i % _colors.length],
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _initial(entries[i].customer),
+                  style: const TextStyle(
+                    fontSize: 7,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -1102,6 +1192,93 @@ class _StatusIcon extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 3),
       child: Image.asset(asset, width: 12, height: 12),
+    );
+  }
+}
+
+// ── Stagger fade-slide wrapper for first-load animation ───────────────────────
+
+class _StaggeredRow extends StatefulWidget {
+  final int index;
+  final Widget child;
+  const _StaggeredRow({required this.index, required this.child});
+
+  @override
+  State<_StaggeredRow> createState() => _StaggeredRowState();
+}
+
+class _StaggeredRowState extends State<_StaggeredRow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _fade;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: AppAnimations.medium,
+    );
+    _fade  = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
+    Future.delayed(AppAnimations.staggerDelay(widget.index), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _fade,
+    child: SlideTransition(position: _slide, child: widget.child),
+  );
+}
+
+// ── Shimmer skeleton for loading state ────────────────────────────────────────
+
+class _TeeSheetShimmerLoading extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade50,
+      child: ListView.builder(
+        itemCount: 14,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        itemBuilder: (_, i) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            children: [
+              Container(
+                width: 68,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

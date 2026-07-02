@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../core/theme/app_theme.dart';
 
 class DashboardBox extends StatelessWidget {
@@ -33,7 +34,6 @@ class DashboardBox extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
@@ -55,7 +55,6 @@ class DashboardBox extends StatelessWidget {
               ],
             ),
           ),
-          // Content
           SizedBox(
             height: height ?? 200,
             child: child,
@@ -71,10 +70,37 @@ class DashboardBoxLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade50,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _bar(double.infinity, 14),
+            const SizedBox(height: 10),
+            _bar(double.infinity, 14),
+            const SizedBox(height: 10),
+            _bar(180, 14),
+            const SizedBox(height: 10),
+            _bar(double.infinity, 14),
+            const SizedBox(height: 10),
+            _bar(140, 14),
+          ],
+        ),
+      ),
     );
   }
+
+  Widget _bar(double w, double h) => Container(
+    width: w,
+    height: h,
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(6),
+    ),
+  );
 }
 
 class DashboardBoxEmpty extends StatelessWidget {
@@ -83,14 +109,20 @@ class DashboardBoxEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.inbox_outlined, size: 36, color: AppColors.textMuted.withOpacity(0.5)),
-          const SizedBox(height: 8),
-          Text(message, style: Theme.of(context).textTheme.bodySmall),
-        ],
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+      builder: (_, v, child) => Opacity(opacity: v, child: child),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.inbox_outlined, size: 36, color: AppColors.textMuted.withOpacity(0.5)),
+            const SizedBox(height: 8),
+            Text(message, style: Theme.of(context).textTheme.bodySmall),
+          ],
+        ),
       ),
     );
   }

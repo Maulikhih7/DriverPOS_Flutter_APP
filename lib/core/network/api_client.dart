@@ -57,7 +57,7 @@ class ApiClient {
     // Encrypt request body (POST / PUT / PATCH / DELETE-with-body)
     // Dev/staging server runs decryptMiddleware which expects { iv, data, tag }
     final body = options.data;
-    if (body != null && body is Map && body.isNotEmpty) {
+    if (body != null && body is Map) {
       final plainText = jsonEncode(body);
       final encrypted = await EncryptionService.encrypt(plainText);
       options.data = encrypted;

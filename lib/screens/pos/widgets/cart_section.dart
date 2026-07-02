@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/customer_model.dart';
 import '../../../providers/pos_provider.dart';
 import '../../../repositories/customer_repository.dart';
+import '../../../widgets/interactive_confirm.dart';
 
 class CartSection extends ConsumerWidget {
   const CartSection({super.key});
@@ -15,7 +17,7 @@ class CartSection extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFFFFFDF5),
         border: Border(left: BorderSide(color: AppColors.border)),
       ),
       child: Column(
@@ -37,15 +39,35 @@ class _CartHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        color: Color(0xFFFFFDF5),
+        border: Border(bottom: BorderSide(color: Color(0xFFE8E0C8))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Order Details',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+          Row(
+            children: [
+              const Icon(Icons.receipt_long_outlined, size: 14, color: AppColors.textMuted),
+              const SizedBox(width: 6),
+              const Text('ORDER DETAILS',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11,
+                      letterSpacing: 1.2, color: AppColors.textMuted)),
+              const Spacer(),
+              if (cart.items.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text('${cart.items.length} item${cart.items.length == 1 ? '' : 's'}',
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700,
+                          color: AppColors.primary)),
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
           _CustomerSelector(customer: cart.customer),
         ],
@@ -232,74 +254,149 @@ class _CartItemsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (cart.items.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shopping_cart_outlined, size: 48, color: AppColors.border),
-            SizedBox(height: 8),
-            Text('No items in cart', style: TextStyle(color: AppColors.textMuted)),
+            Icon(Icons.receipt_long_outlined, size: 48, color: AppColors.border.withOpacity(0.6)),
+            const SizedBox(height: 8),
+            const Text('No items yet', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+            const SizedBox(height: 4),
+            const Text('Tap a product to add', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
           ],
         ),
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       itemCount: cart.items.length,
-      separatorBuilder: (_, __) => const Divider(height: 8),
+      separatorBuilder: (_, __) => const _DashedDivider(),
       itemBuilder: (_, i) {
         final item = cart.items[i];
-        return Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.circular(8),
+        return Dismissible(
+          key: ValueKey('${item.item.id}_$i'),
+          direction: DismissDirection.endToStart,
+          onDismissed: (_) {
+            HapticFeedback.mediumImpact();
+            ref.read(cartProvider.notifier).removeProduct(i);
+          },
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 14),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.delete_outline_rounded, color: AppColors.danger, size: 20),
+                const SizedBox(height: 2),
+                const Text('Remove', style: TextStyle(color: AppColors.danger, fontSize: 9, fontWeight: FontWeight.w700)),
+              ],
+            ),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFFDF5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Item number badge
+                Container(
+                  width: 20, height: 20,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text('${i + 1}',
+                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800,
+                            color: AppColors.primary)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.item.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
+                      Text('\$${item.discountPrice.toStringAsFixed(2)} ea',
+                          style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+                Row(
                   children: [
-                    Text(item.item.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    Text('\$${item.discountPrice.toStringAsFixed(2)} ea',
-                        style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                    _QtyButton(
+                      icon: Icons.remove,
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        ref.read(cartProvider.notifier).updateQuantity(i, item.totalQuantity - 1);
+                      },
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('${item.totalQuantity}',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14,
+                              color: AppColors.primary)),
+                    ),
+                    _QtyButton(
+                      icon: Icons.add,
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        ref.read(cartProvider.notifier).updateQuantity(i, item.totalQuantity + 1);
+                      },
+                    ),
                   ],
                 ),
-              ),
-              Row(
-                children: [
-                  _QtyButton(
-                    icon: Icons.remove,
-                    onTap: () => ref.read(cartProvider.notifier)
-                        .updateQuantity(i, item.totalQuantity - 1),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('${item.totalQuantity}',
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                  ),
-                  _QtyButton(
-                    icon: Icons.add,
-                    onTap: () => ref.read(cartProvider.notifier)
-                        .updateQuantity(i, item.totalQuantity + 1),
-                  ),
-                  const SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: () => ref.read(cartProvider.notifier).removeProduct(i),
-                    child: const Icon(Icons.close, size: 16, color: AppColors.danger),
-                  ),
-                ],
-              ),
-            ],
+                const SizedBox(width: 6),
+                Text('\$${(item.discountPrice * item.totalQuantity).toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12,
+                        color: AppColors.textPrimary)),
+              ],
+            ),
           ),
         );
       },
     );
   }
+}
+
+// Dashed receipt-style divider
+class _DashedDivider extends StatelessWidget {
+  const _DashedDivider();
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        height: 10,
+        child: CustomPaint(painter: _DashedDividerPainter()),
+      );
+}
+
+class _DashedDividerPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFD8D0B8)
+      ..strokeWidth = 1;
+    const dashW = 5.0;
+    const gapW = 4.0;
+    double x = 0;
+    final y = size.height / 2;
+    while (x < size.width) {
+      canvas.drawLine(Offset(x, y), Offset(x + dashW, y), paint);
+      x += dashW + gapW;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedDividerPainter _) => false;
 }
 
 class _QtyButton extends StatelessWidget {
@@ -331,9 +428,10 @@ class _CartTotals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: AppColors.border)),
+        color: Color(0xFFFFFDF5),
+        border: Border(top: BorderSide(color: Color(0xFFE8E0C8))),
       ),
       child: Column(
         children: [
@@ -341,9 +439,9 @@ class _CartTotals extends StatelessWidget {
           if (cart.addonSubtotal > 0)
             _TotalRow(label: 'Addons', value: '\$${cart.addonSubtotal.toStringAsFixed(2)}'),
           _TotalRow(label: 'Tax', value: '\$${(cart.totalTax + cart.addonTax).toStringAsFixed(2)}'),
-          const Divider(height: 12),
+          const _DashedDivider(),
           _TotalRow(
-            label: 'Total',
+            label: 'TOTAL',
             value: '\$${cart.total.toStringAsFixed(2)}',
             bold: true,
           ),
@@ -433,26 +531,18 @@ class _CartActions extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Primary checkout button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: (cart.items.isEmpty || cart.isCheckingOut)
-                  ? null
-                  : () => _checkout(context, ref),
-              icon: cart.isCheckingOut
-                  ? const SizedBox(
-                      width: 16, height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Icon(Icons.payment, size: 18),
-              label: Text(
-                cart.isCheckingOut
-                    ? 'Processing…'
-                    : 'Check Out  \$${cart.total.toStringAsFixed(2)}',
-              ),
-              style: ElevatedButton.styleFrom(minimumSize: const Size(0, 48)),
-            ),
+          // Slide-to-checkout
+          SwipeToConfirm(
+            label: cart.items.isEmpty
+                ? 'Add items to checkout'
+                : 'Slide to Checkout  \$${cart.total.toStringAsFixed(2)}',
+            color: AppColors.primary,
+            loading: cart.isCheckingOut,
+            enabled: cart.items.isNotEmpty && !cart.isCheckingOut,
+            height: 52,
+            onConfirmed: (cart.items.isEmpty || cart.isCheckingOut)
+                ? null
+                : () => _checkout(context, ref),
           ),
         ],
       ),

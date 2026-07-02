@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../core/theme/app_theme.dart';
 import '../../providers/pos_provider.dart';
 import 'widgets/product_card.dart';
@@ -18,7 +19,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize department when departments load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(departmentsProvider.future).then((depts) {
         if (depts.isNotEmpty && ref.read(selectedDepartmentProvider) == null) {
@@ -107,12 +107,34 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   }
 }
 
-class _ProductsPanel extends ConsumerWidget {
+class _ProductsPanel extends ConsumerStatefulWidget {
   final TextEditingController searchCtrl;
   const _ProductsPanel({required this.searchCtrl});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ProductsPanel> createState() => _ProductsPanelState();
+}
+
+class _ProductsPanelState extends ConsumerState<_ProductsPanel> {
+  final FocusNode _searchFocus = FocusNode();
+  bool _searchFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchFocus.addListener(() {
+      setState(() => _searchFocused = _searchFocus.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final deptsAsync = ref.watch(departmentsProvider);
     final selectedDept = ref.watch(selectedDepartmentProvider);
     final labelsAsync = ref.watch(labelsProvider);
@@ -120,22 +142,38 @@ class _ProductsPanel extends ConsumerWidget {
 
     return Column(
       children: [
-        // Search bar
+        // Search bar with focus animation
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 2, 16, 0),
-          child: TextFormField(
-            controller: searchCtrl,
-            style: const TextStyle(fontSize: 13),
-            decoration: const InputDecoration(
-              hintText: 'Search products...',
-              hintStyle: TextStyle(fontSize: 13),
-              prefixIcon: Icon(Icons.search, size: 18),
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              boxShadow: _searchFocused
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : [],
             ),
-            onChanged: (v) {
-              ref.read(productSearchProvider.notifier).state = v;
-            },
+            child: TextFormField(
+              controller: widget.searchCtrl,
+              focusNode: _searchFocus,
+              style: const TextStyle(fontSize: 13),
+              decoration: const InputDecoration(
+                hintText: 'Search products...',
+                hintStyle: TextStyle(fontSize: 13),
+                prefixIcon: Icon(Icons.search, size: 18),
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+              ),
+              onChanged: (v) {
+                ref.read(productSearchProvider.notifier).state = v;
+              },
+            ),
           ),
         ),
 
@@ -153,26 +191,31 @@ class _ProductsPanel extends ConsumerWidget {
               itemBuilder: (_, i) {
                 final dept = depts[i];
                 final isSelected = selectedDept == dept.name;
-                return GestureDetector(
+                return _PressableChip(
                   onTap: () {
                     ref.read(selectedDepartmentProvider.notifier).state = dept.name;
                     ref.read(selectedLabelProvider.notifier).state = null;
                   },
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: isSelected ? AppColors.primary : Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
+                      border: Border.all(
+                        color: isSelected ? AppColors.primary : AppColors.border,
+                      ),
                     ),
                     child: Center(
-                      child: Text(
-                        dept.name,
+                      child: AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 200),
                         style: TextStyle(
                           color: isSelected ? Colors.white : AppColors.textSecondary,
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
+                        child: Text(dept.name),
                       ),
                     ),
                   ),
@@ -198,15 +241,19 @@ class _ProductsPanel extends ConsumerWidget {
                 itemBuilder: (_, i) {
                   if (i == 0) {
                     final isAll = selectedLabel == null;
-                    return _LabelChip(label: 'All', isSelected: isAll, onTap: () {
-                      ref.read(selectedLabelProvider.notifier).state = null;
-                    });
+                    return _LabelChip(
+                      label: 'All',
+                      isSelected: isAll,
+                      onTap: () => ref.read(selectedLabelProvider.notifier).state = null,
+                    );
                   }
                   final label = labels[i - 1];
                   final isSel = selectedLabel == label.id;
-                  return _LabelChip(label: label.name, isSelected: isSel, onTap: () {
-                    ref.read(selectedLabelProvider.notifier).state = label.id;
-                  });
+                  return _LabelChip(
+                    label: label.name,
+                    isSelected: isSel,
+                    onTap: () => ref.read(selectedLabelProvider.notifier).state = label.id,
+                  );
                 },
               ),
             );
@@ -220,30 +267,81 @@ class _ProductsPanel extends ConsumerWidget {
   }
 }
 
-class _LabelChip extends StatelessWidget {
+class _PressableChip extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+  const _PressableChip({required this.child, required this.onTap});
+
+  @override
+  State<_PressableChip> createState() => _PressableChipState();
+}
+
+class _PressableChipState extends State<_PressableChip> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.93 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _LabelChip extends StatefulWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
   const _LabelChip({required this.label, required this.isSelected, required this.onTap});
 
   @override
+  State<_LabelChip> createState() => _LabelChipState();
+}
+
+class _LabelChipState extends State<_LabelChip> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryLight : AppColors.background,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? AppColors.primary : AppColors.textMuted,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.93 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: widget.isSelected ? AppColors.primaryLight : AppColors.background,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: widget.isSelected ? AppColors.primary : AppColors.border,
+            ),
+          ),
+          child: Center(
+            child: AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                color: widget.isSelected ? AppColors.primary : AppColors.textMuted,
+                fontSize: 12,
+                fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+              child: Text(widget.label),
             ),
           ),
         ),
@@ -267,7 +365,7 @@ class _ProductsGrid extends ConsumerWidget {
           mainAxisSpacing: 8,
         ),
         itemCount: 15,
-        itemBuilder: (_, __) => _ShimmerCard(),
+        itemBuilder: (_, __) => const _ShimmerCard(),
       ),
       error: (e, _) => Center(
         child: Column(
@@ -281,14 +379,20 @@ class _ProductsGrid extends ConsumerWidget {
       ),
       data: (products) {
         if (products.isEmpty) {
-          return const Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.border),
-                SizedBox(height: 8),
-                Text('No products found', style: TextStyle(color: AppColors.textMuted)),
-              ],
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOut,
+            builder: (_, v, child) => Opacity(opacity: v, child: child),
+            child: const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.inventory_2_outlined, size: 48, color: AppColors.border),
+                  SizedBox(height: 8),
+                  Text('No products found', style: TextStyle(color: AppColors.textMuted)),
+                ],
+              ),
             ),
           );
         }
@@ -305,7 +409,13 @@ class _ProductsGrid extends ConsumerWidget {
             product: products[i],
             onTap: () {
               ref.read(cartProvider.notifier).addProduct(products[i]);
-              _showAddedSnack(context, products[i].name);
+              _showAddedSnack(context, products[i].name, 1);
+            },
+            onAddMultiple: (qty) {
+              for (int k = 0; k < qty; k++) {
+                ref.read(cartProvider.notifier).addProduct(products[i]);
+              }
+              _showAddedSnack(context, products[i].name, qty);
             },
           ),
         );
@@ -313,11 +423,17 @@ class _ProductsGrid extends ConsumerWidget {
     );
   }
 
-  void _showAddedSnack(BuildContext context, String name) {
+  void _showAddedSnack(BuildContext context, String name, int qty) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(
-        content: Text('$name added to cart'),
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Text(qty > 1 ? '$name ×$qty added to cart' : '$name added to cart'),
+          ],
+        ),
         duration: const Duration(seconds: 1),
         backgroundColor: AppColors.primary,
       ));
@@ -325,12 +441,18 @@ class _ProductsGrid extends ConsumerWidget {
 }
 
 class _ShimmerCard extends StatelessWidget {
+  const _ShimmerCard();
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.border.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(12),
+    return Shimmer.fromColors(
+      baseColor: Colors.grey.shade200,
+      highlightColor: Colors.grey.shade50,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }

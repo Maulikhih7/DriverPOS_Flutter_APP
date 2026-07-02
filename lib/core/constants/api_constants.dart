@@ -96,7 +96,7 @@ class ApiConstants {
   static const String transactionEmailReceipt = '/report/transaction/email';
   static const String transactionSearch = 'report/transaction/search';
   static const String transactionAmount = 'report/transaction/data';
-  static const String voidTransaction = 'report/transaction/void';
+  static const String voidTransaction = '/transaction/void';
 
   // Gift Cards
   static const String giftCards = '/giftCard';

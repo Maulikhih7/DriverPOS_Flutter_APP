@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/tee_sheet_model.dart';
 import '../repositories/tee_sheet_repository.dart';
 
-final teeSheetListProvider = FutureProvider<List<TeeSheetInfo>>((ref) async {
+final teeSheetListProvider = FutureProvider.autoDispose<List<TeeSheetInfo>>((ref) async {
   return ref.read(teeSheetRepositoryProvider).getAllTeesheets();
 });
 

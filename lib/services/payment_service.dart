@@ -61,6 +61,50 @@ class PaymentService {
       throw PaymentException(e.code, e.message ?? 'Transaction failed');
     }
   }
+
+  static Future<PaymentResult> performVoid({
+    required String tpn,
+    required String refId,
+  }) async {
+    final config = await DvPayLiteConfig.load();
+    try {
+      final result = await _channel.invokeMethod<Map>('performSale', {
+        'tpn': tpn,
+        'applicationType': 'DVPAYLITE',
+        'type': 'VOID',
+        'refId': refId,
+        ...config.toPaymentArgs(),
+      });
+      final res = result != null ? Map<String, dynamic>.from(result) : <String, dynamic>{};
+      final approved = res['respCode'] == '00' || res['status'] == 'Approved';
+      return PaymentResult(approved: approved, data: res, refId: refId);
+    } on PlatformException catch (e) {
+      throw PaymentException(e.code, e.message ?? 'Void failed');
+    }
+  }
+
+  static Future<PaymentResult> performRefund({
+    required String tpn,
+    required double amount,
+    required String refId,
+  }) async {
+    final config = await DvPayLiteConfig.load();
+    try {
+      final result = await _channel.invokeMethod<Map>('performSale', {
+        'tpn': tpn,
+        'applicationType': 'DVPAYLITE',
+        'type': 'REFUND',
+        'amount': amount.toStringAsFixed(2),
+        'refId': refId,
+        ...config.toPaymentArgs(),
+      });
+      final res = result != null ? Map<String, dynamic>.from(result) : <String, dynamic>{};
+      final approved = res['respCode'] == '00' || res['status'] == 'Approved';
+      return PaymentResult(approved: approved, data: res, refId: refId);
+    } on PlatformException catch (e) {
+      throw PaymentException(e.code, e.message ?? 'Refund failed');
+    }
+  }
 }
 
 class PaymentResult {

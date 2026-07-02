@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import '../core/theme/app_animations.dart';
 import '../providers/auth_provider.dart';
 import '../providers/pos_provider.dart';
 
@@ -27,6 +29,10 @@ class _MainShellState extends ConsumerState<MainShell> {
   DateTime _now = DateTime.now();
   Timer? _timer;
 
+  // Network status
+  bool _isOnline = true;
+  Timer? _connectTimer;
+
   // AppBar dropdown state
   String _selectedCourse = '';
   bool _isCourseMenuOpen = false;
@@ -40,12 +46,26 @@ class _MainShellState extends ConsumerState<MainShell> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() => _now = DateTime.now());
     });
+    _checkConnectivity();
+    _connectTimer = Timer.periodic(const Duration(seconds: 10), (_) => _checkConnectivity());
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _connectTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _checkConnectivity() async {
+    try {
+      final result = await InternetAddress.lookup('api.dev.driverpos.io')
+          .timeout(const Duration(seconds: 3));
+      final online = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+      if (mounted && online != _isOnline) setState(() => _isOnline = online);
+    } catch (_) {
+      if (mounted && _isOnline) setState(() => _isOnline = false);
+    }
   }
 
   int _currentIndex(BuildContext context) {
@@ -77,7 +97,63 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     return Scaffold(
       appBar: _buildAppBar(user, courseName),
-      body: widget.child,
+      body: Column(
+        children: [
+          // ── Network status banner ──────────────────────────────────────────
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOutCubic,
+            height: _isOnline ? 0 : 36,
+            color: const Color(0xFFF59E0B),
+            child: _isOnline
+                ? const SizedBox.shrink()
+                : const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.wifi_off_rounded, size: 15, color: Colors.white),
+                      SizedBox(width: 8),
+                      Text(
+                        'No internet connection',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+          // ── Main content with slide+fade transition ────────────────────────
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: AppAnimations.fast,
+              switchInCurve: AppAnimations.enter,
+              switchOutCurve: AppAnimations.exit,
+              transitionBuilder: (child, animation) {
+                final slide = Tween<Offset>(
+                  begin: const Offset(0.03, 0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+                return SlideTransition(
+                  position: slide,
+                  child: FadeTransition(opacity: animation, child: child),
+                );
+              },
+              layoutBuilder: (currentChild, previousChildren) => Stack(
+                fit: StackFit.expand,
+                children: [
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              ),
+              child: KeyedSubtree(
+                key: ValueKey(GoRouterState.of(context).matchedLocation),
+                child: widget.child,
+              ),
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: _NotchedNavBar(
         selectedIndex: index,
         tabs: _tabs,
@@ -88,30 +164,43 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 
   PreferredSizeWidget _buildAppBar(dynamic user, String courseName) {
+    const gradient = LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [Color(0xFF162742), Color(0xFF244065), Color(0xFF1A5870)],
+      stops: [0.0, 0.55, 1.0],
+    );
+
     return PreferredSize(
       preferredSize: const Size.fromHeight(64),
       child: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        shadowColor: Colors.black12,
+        shadowColor: Colors.black26,
         automaticallyImplyLeading: false,
         titleSpacing: 0,
         toolbarHeight: 64,
+        flexibleSpace: Container(decoration: const BoxDecoration(gradient: gradient)),
         title: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(width: 16),
 
-            // Logo
-            SizedBox(
-              height: 52,
+            // Logo — white pill so dark-on-transparent asset reads on the gradient
+            Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Image.asset(
                 'assets/images/drvrpos_tablogo.png',
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Icon(
                   Icons.golf_course,
                   color: Color(0xFF244065),
-                  size: 32,
+                  size: 28,
                 ),
               ),
             ),
@@ -126,7 +215,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                 fit: BoxFit.contain,
                 errorBuilder: (_, __, ___) => const Icon(
                   Icons.flag,
-                  color: Color(0xFF244065),
+                  color: Colors.white,
                   size: 20,
                 ),
               ),
@@ -135,10 +224,8 @@ class _MainShellState extends ConsumerState<MainShell> {
             PopupMenuButton<String>(
               padding: EdgeInsets.zero,
               offset: const Offset(-20, 48),
-              onOpened: () =>
-                  setState(() => _isCourseMenuOpen = true),
-              onCanceled: () =>
-                  setState(() => _isCourseMenuOpen = false),
+              onOpened: () => setState(() => _isCourseMenuOpen = true),
+              onCanceled: () => setState(() => _isCourseMenuOpen = false),
               onSelected: (v) => setState(() {
                 _selectedCourse = v;
                 _isCourseMenuOpen = false;
@@ -161,14 +248,14 @@ class _MainShellState extends ConsumerState<MainShell> {
                     style: GoogleFonts.nunito(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF244065),
+                      color: Colors.white,
                     ),
                   ),
                   Icon(
                     _isCourseMenuOpen
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
-                    color: const Color(0xFF244065),
+                    color: Colors.white,
                     size: 20,
                   ),
                 ],
@@ -180,10 +267,8 @@ class _MainShellState extends ConsumerState<MainShell> {
             // Tee sheet dropdown pill
             PopupMenuButton<String>(
               offset: const Offset(0, 48),
-              onOpened: () =>
-                  setState(() => _isTeeSheetMenuOpen = true),
-              onCanceled: () =>
-                  setState(() => _isTeeSheetMenuOpen = false),
+              onOpened: () => setState(() => _isTeeSheetMenuOpen = true),
+              onCanceled: () => setState(() => _isTeeSheetMenuOpen = false),
               onSelected: (v) => setState(() {
                 _selectedTeeSheet = v;
                 _isTeeSheetMenuOpen = false;
@@ -199,11 +284,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                             fontSize: 14, color: const Color(0xFF244065))),
                   )).toList(),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F3F3),
+                  color: Colors.white.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.white.withOpacity(0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -212,7 +297,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                       _selectedTeeSheet,
                       style: GoogleFonts.nunito(
                           fontSize: 14,
-                          color: const Color(0xFF212529),
+                          color: Colors.white,
                           fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(width: 4),
@@ -220,7 +305,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                       _isTeeSheetMenuOpen
                           ? Icons.keyboard_arrow_up_rounded
                           : Icons.keyboard_arrow_down_rounded,
-                      color: const Color(0xFF212529),
+                      color: Colors.white,
                       size: 18,
                     ),
                   ],
@@ -232,24 +317,23 @@ class _MainShellState extends ConsumerState<MainShell> {
 
             // Date + time pill
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFEDF3EC),
-                border: Border.all(color: const Color(0xFFD0D5DD)),
+                color: Colors.white.withOpacity(0.12),
+                border: Border.all(color: Colors.white.withOpacity(0.3)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.calendar_today_outlined,
-                      size: 16, color: Color(0xFF799C74)),
+                      size: 16, color: Colors.white70),
                   const SizedBox(width: 6),
                   Text(
                     DateFormat('EEE, MMM d').format(_now),
                     style: GoogleFonts.nunito(
                         fontSize: 14,
-                        color: const Color(0xFF212529),
+                        color: Colors.white,
                         fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 16),
@@ -257,7 +341,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                     DateFormat('hh:mm a').format(_now),
                     style: GoogleFonts.nunito(
                         fontSize: 14,
-                        color: const Color(0xFF212529),
+                        color: Colors.white,
                         fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -266,26 +350,22 @@ class _MainShellState extends ConsumerState<MainShell> {
             const SizedBox(width: 12),
 
             // Weather placeholder
-            const Icon(Icons.wb_sunny_rounded,
-                color: Colors.amber, size: 20),
+            const Icon(Icons.wb_sunny_rounded, color: Colors.amber, size: 20),
             const SizedBox(width: 4),
             Text('°F',
                 style: GoogleFonts.nunito(
                     fontSize: 14,
-                    color: const Color(0xFF212529),
+                    color: Colors.white,
                     fontWeight: FontWeight.w600)),
 
             const SizedBox(width: 10),
-            const Icon(Icons.edit_outlined,
-                color: Color(0xFF244065), size: 20),
+            const Icon(Icons.edit_outlined, color: Colors.white, size: 20),
             const SizedBox(width: 10),
-            const Icon(Icons.open_in_new_rounded,
-                color: Color(0xFF244065), size: 20),
+            const Icon(Icons.open_in_new_rounded, color: Colors.white, size: 20),
             const SizedBox(width: 10),
             GestureDetector(
               onTap: () => ref.invalidate(cartProvider),
-              child: const Icon(Icons.refresh_rounded,
-                  color: Color(0xFF244065), size: 20),
+              child: const Icon(Icons.refresh_rounded, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 12),
 
@@ -294,23 +374,16 @@ class _MainShellState extends ConsumerState<MainShell> {
               offset: const Offset(0, 56),
               color: Colors.white,
               elevation: 4,
-              constraints: const BoxConstraints(
-                  minWidth: 200, maxWidth: 200),
+              constraints: const BoxConstraints(minWidth: 200, maxWidth: 200),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              onOpened: () =>
-                  setState(() => _isProfileMenuOpen = true),
-              onCanceled: () =>
-                  setState(() => _isProfileMenuOpen = false),
+              onOpened: () => setState(() => _isProfileMenuOpen = true),
+              onCanceled: () => setState(() => _isProfileMenuOpen = false),
               onSelected: (v) {
                 setState(() => _isProfileMenuOpen = false);
-                if (v == 'logout') {
-                  ref.read(authProvider.notifier).logout();
-                }
-                if (v == 'terminal') {
-                  context.push('/terminal-settings');
-                }
+                if (v == 'logout') ref.read(authProvider.notifier).logout();
+                if (v == 'terminal') context.push('/terminal-settings');
               },
               itemBuilder: (_) => [
                 _profileMenuItem('terminal', 'Terminal Setup'),
@@ -340,13 +413,13 @@ class _MainShellState extends ConsumerState<MainShell> {
                         style: GoogleFonts.nunito(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: const Color(0xFF212529)),
+                            color: Colors.white),
                       ),
                       Text(
                         user?.role ?? 'Staff',
                         style: GoogleFonts.nunito(
                             fontSize: 12,
-                            color: const Color(0xFF6B7280)),
+                            color: Colors.white70),
                       ),
                     ],
                   ),
@@ -354,7 +427,7 @@ class _MainShellState extends ConsumerState<MainShell> {
                     _isProfileMenuOpen
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
-                    color: const Color(0xFF212529),
+                    color: Colors.white,
                     size: 18,
                   ),
                 ],

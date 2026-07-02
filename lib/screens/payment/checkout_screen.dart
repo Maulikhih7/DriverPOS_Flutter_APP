@@ -37,6 +37,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   _PayMethod _method = _PayMethod.cash;
   bool _processing = false;
   String? _error;
+  bool _showSuccess = false;
+  String _successMessage = '';
 
   final _pinCtrl = TextEditingController();
   final _tenderedCtrl = TextEditingController();
@@ -312,15 +314,38 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     _onSuccess('Split payment recorded');
   }
 
+  void _setTendered(double amount) {
+    setState(() => _tenderedCtrl.text = amount.toStringAsFixed(2));
+  }
+
+  void _numpadKey(String key) {
+    final current = _tenderedCtrl.text;
+    setState(() {
+      if (key == '⌫') {
+        if (current.length <= 1) {
+          _tenderedCtrl.text = '0';
+        } else {
+          var next = current.substring(0, current.length - 1);
+          if (next.endsWith('.')) next = next.substring(0, next.length - 1);
+          _tenderedCtrl.text = next;
+        }
+      } else if (key == '.') {
+        if (!current.contains('.')) _tenderedCtrl.text = '$current.';
+      } else {
+        final parts = current.split('.');
+        if (parts.length == 2 && parts[1].length >= 2) return;
+        _tenderedCtrl.text = current == '0' ? key : '$current$key';
+      }
+    });
+  }
+
   void _onSuccess(String message) {
     if (!mounted) return;
-    ref.read(cartProvider.notifier).clearCart();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(message),
-      backgroundColor: AppColors.primary,
-      duration: const Duration(seconds: 4),
-    ));
-    context.go('/pos');
+    setState(() {
+      _processing = false;
+      _successMessage = message;
+      _showSuccess = true;
+    });
   }
 
   // ── UI ───────────────────────────────────────────────────────────────────────
@@ -337,28 +362,39 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           onPressed: _processing ? null : () => context.pop(),
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildSummary(),
-                const SizedBox(height: 16),
-                _buildMethodPicker(),
-                const SizedBox(height: 16),
-                _buildMethodDetails(),
-                const SizedBox(height: 16),
-                _buildPinField(),
-                if (_error != null) ...[
-                  const SizedBox(height: 12),
-                  _buildError(),
-                ],
-                const SizedBox(height: 100),
-              ],
-            ),
+          Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _buildSummary(),
+                    const SizedBox(height: 16),
+                    _buildMethodPicker(),
+                    const SizedBox(height: 16),
+                    _buildMethodDetails(),
+                    const SizedBox(height: 16),
+                    _buildPinField(),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      _buildError(),
+                    ],
+                    const SizedBox(height: 100),
+                  ],
+                ),
+              ),
+              _buildConfirmButton(),
+            ],
           ),
-          _buildConfirmButton(),
+          if (_showSuccess) _SuccessOverlay(
+            message: _successMessage,
+            onComplete: () {
+              ref.read(cartProvider.notifier).clearCart();
+              if (mounted) context.go('/pos');
+            },
+          ),
         ],
       ),
     );
@@ -484,31 +520,69 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Widget _buildCashDetails() {
+    final display = _tenderedCtrl.text.isEmpty ? '0.00' : _tenderedCtrl.text;
     return _Card(child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Amount Tendered', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: _tenderedCtrl,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))],
-          decoration: const InputDecoration(prefixText: '\$ ', isDense: true, labelText: 'Tendered amount'),
-          onChanged: (_) => setState(() {}),
+        // ── Amount display ───────────────────────────────────────────────────
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            children: [
+              const Text('AMOUNT TENDERED', style: TextStyle(
+                fontSize: 10, fontWeight: FontWeight.w700,
+                letterSpacing: 1.5, color: AppColors.textMuted,
+              )),
+              const SizedBox(height: 4),
+              Text('\$$display', style: const TextStyle(
+                fontSize: 38, fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+              )),
+            ],
+          ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        const SizedBox(height: 12),
+
+        // ── Quick presets ────────────────────────────────────────────────────
+        Wrap(
+          spacing: 8, runSpacing: 8,
           children: [
-            const Text('Change Due', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-            Text(
-              '\$${_change.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 24, fontWeight: FontWeight.w800,
-                color: _change >= 0 ? AppColors.primary : AppColors.danger,
-              ),
-            ),
+            _PresetBtn('Exact', onTap: () => _setTendered(widget.total)),
+            for (final amt in [5, 10, 20, 50, 100])
+              _PresetBtn('\$$amt', onTap: () => _setTendered(amt.toDouble())),
           ],
+        ),
+        const SizedBox(height: 14),
+
+        // ── Numpad ───────────────────────────────────────────────────────────
+        _CashNumpad(onKey: _numpadKey),
+        const SizedBox(height: 14),
+
+        // ── Change due ───────────────────────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: _change >= 0 ? AppColors.primaryLight : const Color(0xFFFFEBEE),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Change Due', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+              Text(
+                '\$${_change.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 28, fontWeight: FontWeight.w800,
+                  color: _change >= 0 ? AppColors.primary : AppColors.danger,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     ));
@@ -885,6 +959,130 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 }
 
+// ── Payment success overlay ───────────────────────────────────────────────────
+
+class _SuccessOverlay extends StatefulWidget {
+  final String message;
+  final VoidCallback onComplete;
+  const _SuccessOverlay({required this.message, required this.onComplete});
+
+  @override
+  State<_SuccessOverlay> createState() => _SuccessOverlayState();
+}
+
+class _SuccessOverlayState extends State<_SuccessOverlay>
+    with TickerProviderStateMixin {
+  late final AnimationController _mainCtrl;
+  late final AnimationController _ringCtrl;
+  late final Animation<double> _scale;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _mainCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 650));
+    _ringCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 900));
+    _scale = CurvedAnimation(parent: _mainCtrl, curve: Curves.easeOutBack);
+    _opacity = CurvedAnimation(parent: _mainCtrl, curve: Curves.easeOut);
+
+    HapticFeedback.heavyImpact();
+    _mainCtrl.forward();
+    _ringCtrl.repeat();
+
+    Future.delayed(const Duration(milliseconds: 2200), () {
+      if (mounted) widget.onComplete();
+    });
+  }
+
+  @override
+  void dispose() {
+    _mainCtrl.dispose();
+    _ringCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([_mainCtrl, _ringCtrl]),
+      builder: (_, __) => Container(
+        color: Colors.black.withOpacity(0.65 * _opacity.value),
+        alignment: Alignment.center,
+        child: Opacity(
+          opacity: _opacity.value,
+          child: Transform.scale(
+            scale: _scale.value,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Pulsing ring + checkmark
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Transform.scale(
+                      scale: 1.0 + 0.35 * _ringCtrl.value,
+                      child: Opacity(
+                        opacity: (1.0 - _ringCtrl.value).clamp(0, 1),
+                        child: Container(
+                          width: 130,
+                          height: 130,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: const Color(0xFF9ECF9A), width: 3),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF9ECF9A),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x559ECF9A),
+                            blurRadius: 32,
+                            spreadRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(Icons.check_rounded,
+                          size: 58, color: Colors.white),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                const Text(
+                  'Payment Complete!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.message,
+                  style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Shared widgets ─────────────────────────────────────────────────────────────
 
 class _Card extends StatelessWidget {
@@ -929,6 +1127,99 @@ class _SRow extends StatelessWidget {
       ],
     ),
   );
+}
+
+// ── Cash numpad widgets ────────────────────────────────────────────────────────
+
+class _CashNumpad extends StatelessWidget {
+  final ValueChanged<String> onKey;
+  const _CashNumpad({required this.onKey});
+
+  static const _rows = [
+    ['7', '8', '9'],
+    ['4', '5', '6'],
+    ['1', '2', '3'],
+    ['.', '0', '⌫'],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: _rows.map((row) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Row(
+          children: row.map((k) => Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: _NumpadBtn(label: k, onTap: () => onKey(k)),
+            ),
+          )).toList(),
+        ),
+      )).toList(),
+    );
+  }
+}
+
+class _NumpadBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _NumpadBtn({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final isBack = label == '⌫';
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        height: 54,
+        decoration: BoxDecoration(
+          color: isBack ? const Color(0xFFFFEBEE) : Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isBack ? AppColors.danger.withValues(alpha: 0.35) : AppColors.border,
+          ),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 2, offset: const Offset(0, 1)),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: isBack
+            ? const Icon(Icons.backspace_outlined, size: 20, color: AppColors.danger)
+            : Text(label, style: const TextStyle(
+                fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+      ),
+    );
+  }
+}
+
+class _PresetBtn extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  const _PresetBtn(this.label, {required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+        ),
+        child: Text(label, style: const TextStyle(
+          fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary,
+        )),
+      ),
+    );
+  }
 }
 
 class _MethodTile extends StatelessWidget {

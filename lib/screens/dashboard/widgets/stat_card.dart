@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/app_animations.dart';
 import '../../../core/theme/app_theme.dart';
 
 class StatCard extends StatelessWidget {
@@ -9,6 +10,10 @@ class StatCard extends StatelessWidget {
   final Color? bgColor;
   final String? subtitle;
 
+  // Optional count-up animation: if set, animates from 0→animatedEnd on mount.
+  final double? animatedEnd;
+  final String Function(double)? formatter;
+
   const StatCard({
     super.key,
     required this.title,
@@ -17,12 +22,30 @@ class StatCard extends StatelessWidget {
     this.iconColor,
     this.bgColor,
     this.subtitle,
+    this.animatedEnd,
+    this.formatter,
   });
 
   @override
   Widget build(BuildContext context) {
     final bg = bgColor ?? AppColors.primaryLight;
     final ic = iconColor ?? AppColors.primary;
+    final valueStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+      color: AppColors.textPrimary,
+    );
+
+    Widget valueWidget;
+    if (animatedEnd != null && formatter != null) {
+      valueWidget = TweenAnimationBuilder<double>(
+        duration: AppAnimations.countUp,
+        curve: Curves.easeOut,
+        tween: Tween(begin: 0, end: animatedEnd!),
+        builder: (_, v, __) => Text(formatter!(v), style: valueStyle),
+      );
+    } else {
+      valueWidget = Text(value, style: valueStyle);
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -54,13 +77,7 @@ class StatCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
+                valueWidget,
                 const SizedBox(height: 2),
                 Text(
                   title,

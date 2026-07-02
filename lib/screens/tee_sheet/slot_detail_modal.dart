@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import '../../models/tee_sheet_model.dart';
 import '../../providers/tee_sheet_provider.dart';
 import '../../repositories/tee_sheet_repository.dart';
 import '../../services/socket_service.dart';
+import '../../widgets/interactive_confirm.dart';
 
 // ── Public entry-point ────────────────────────────────────────────────────────
 
@@ -22,12 +24,16 @@ Future<void> showSlotDetailModal(
   return showDialog(
     context: context,
     barrierDismissible: true,
-    builder: (_) => SlotDetailModal(
-      sheet: sheet,
-      startingSlot: startingSlot,
-      date: date,
-      existingEntries: existingEntries,
-      existingCount: existingCount,
+    barrierColor: Colors.black38,
+    builder: (_) => BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      child: SlotDetailModal(
+        sheet: sheet,
+        startingSlot: startingSlot,
+        date: date,
+        existingEntries: existingEntries,
+        existingCount: existingCount,
+      ),
     ),
   );
 }
@@ -558,39 +564,57 @@ class _SlotDetailModalState extends ConsumerState<SlotDetailModal>
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      child: SizedBox(
-        width: 1020,
-        height: mq.size.height * 0.88,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildTabRow(),
-              if (_error != null)
-                Container(
-                  width: double.infinity,
-                  color: AppColors.danger.withValues(alpha: 0.08),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(
-                      color: AppColors.danger,
-                      fontSize: 13,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+      builder: (_, v, child) => Opacity(
+        opacity: v,
+        child: Transform.scale(scale: 0.95 + 0.05 * v, child: child),
+      ),
+      child: Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: SizedBox(
+          width: 1020,
+          height: mq.size.height * 0.88,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.white.withOpacity(0.6), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.18),
+                  blurRadius: 40,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                _buildHeader(),
+                _buildTabRow(),
+                if (_error != null)
+                  Container(
+                    width: double.infinity,
+                    color: AppColors.danger.withValues(alpha: 0.08),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(
+                        color: AppColors.danger,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                ),
-              Expanded(child: _buildTabContent()),
-            ],
+                Expanded(child: _buildTabContent()),
+              ],
+            ),
           ),
         ),
       ),
@@ -1111,6 +1135,7 @@ class _SlotDetailModalState extends ConsumerState<SlotDetailModal>
 
   Widget _buildFooter() {
     final isExisting = widget.existingEntries.isNotEmpty;
+    final blocked = _saving || _loadingDetail;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -1150,162 +1175,55 @@ class _SlotDetailModalState extends ConsumerState<SlotDetailModal>
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
 
-          // Action buttons
+          // Action buttons — swipe & hold controls
           SizedBox(
-            width: 150,
+            width: 270,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (!isExisting) ...[
-                  // Reserve button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 38,
-                    child: ElevatedButton(
-                      onPressed: _saving ? null : () => _saveBooking(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF244065),
-                        disabledBackgroundColor: const Color(
-                          0xFF244065,
-                        ).withValues(alpha: 0.5),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: _saving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              'Reserve',
-                              style: GoogleFonts.nunito(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                    ),
+                  // Slide to Reserve
+                  SwipeToConfirm(
+                    label: 'Slide to Reserve',
+                    color: const Color(0xFF244065),
+                    loading: _saving,
+                    enabled: !blocked,
+                    height: 48,
+                    onConfirmed: _saving ? null : () => _saveBooking(),
                   ),
-                  const SizedBox(height: 6),
-
-                  // Reserve & Pay button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 38,
-                    child: ElevatedButton(
-                      onPressed: _saving
-                          ? null
-                          : () => _saveBooking(andPay: true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF5A623),
-                        disabledBackgroundColor: const Color(
-                          0xFFF5A623,
-                        ).withValues(alpha: 0.5),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: _saving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              'Reserve & Pay',
-                              style: GoogleFonts.nunito(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                    ),
+                  const SizedBox(height: 8),
+                  // Hold to Reserve & Pay
+                  HoldToConfirm(
+                    label: 'Reserve & Pay',
+                    color: const Color(0xFFF5A623),
+                    holdDuration: const Duration(milliseconds: 1100),
+                    loading: _saving,
+                    enabled: !blocked,
+                    height: 48,
+                    onConfirmed: _saving ? null : () => _saveBooking(andPay: true),
                   ),
                 ] else ...[
-                  SizedBox(
-                    width: double.infinity,
-                    height: 38,
-                    child: ElevatedButton(
-                      onPressed: (_loadingDetail || _saving)
-                          ? null
-                          : _updateBooking,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF244065),
-                        disabledBackgroundColor: const Color(
-                          0xFF244065,
-                        ).withValues(alpha: 0.5),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: _saving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              'Update',
-                              style: GoogleFonts.nunito(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                    ),
+                  // Hold to Update
+                  HoldToConfirm(
+                    label: 'Update Booking',
+                    color: const Color(0xFF244065),
+                    holdDuration: const Duration(milliseconds: 900),
+                    loading: _saving,
+                    enabled: !blocked,
+                    height: 48,
+                    onConfirmed: blocked ? null : _updateBooking,
                   ),
-                  const SizedBox(height: 6),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 38,
-                    child: ElevatedButton(
-                      onPressed: (_loadingDetail || _saving)
-                          ? null
-                          : _payExistingSlot,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF5A623),
-                        disabledBackgroundColor: const Color(
-                          0xFFF5A623,
-                        ).withValues(alpha: 0.5),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: _saving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(
-                              'Pay',
-                              style: GoogleFonts.nunito(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                    ),
+                  const SizedBox(height: 8),
+                  // Slide to Pay
+                  SwipeToConfirm(
+                    label: 'Slide to Pay',
+                    color: const Color(0xFFF5A623),
+                    loading: _saving,
+                    enabled: !blocked,
+                    height: 48,
+                    onConfirmed: blocked ? null : _payExistingSlot,
                   ),
                 ],
               ],

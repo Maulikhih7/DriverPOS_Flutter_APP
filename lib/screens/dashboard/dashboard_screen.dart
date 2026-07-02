@@ -112,6 +112,8 @@ class _SalesSummaryRow extends ConsumerWidget {
       0, (sum, d) => sum + d.amount) ?? 0.0;
     final totalTeeTimes = bookedAsync.value?.length ?? 0;
     final currFmt = NumberFormat.currency(symbol: '\$');
+    final deptCount = (ref.watch(departmentSalesProvider).value?.length ?? 0).toDouble();
+    final lowCount  = (ref.watch(lowInventoryProvider).value?.length ?? 0).toDouble();
 
     return GridView.count(
       crossAxisCount: 2,
@@ -127,6 +129,8 @@ class _SalesSummaryRow extends ConsumerWidget {
           icon: Icons.attach_money,
           iconColor: AppColors.primary,
           bgColor: AppColors.primaryLight,
+          animatedEnd: totalSales,
+          formatter: (v) => currFmt.format(v),
         ),
         StatCard(
           title: 'Booked Tee Times',
@@ -134,20 +138,26 @@ class _SalesSummaryRow extends ConsumerWidget {
           icon: Icons.golf_course,
           iconColor: AppColors.info,
           bgColor: AppColors.infoMuted,
+          animatedEnd: totalTeeTimes.toDouble(),
+          formatter: (v) => v.toStringAsFixed(0),
         ),
         StatCard(
           title: 'Departments',
-          value: (ref.watch(departmentSalesProvider).value?.length ?? 0).toString(),
+          value: deptCount.toStringAsFixed(0),
           icon: Icons.category_outlined,
           iconColor: const Color(0xFFF1AE24),
           bgColor: const Color(0xFFFFF8E1),
+          animatedEnd: deptCount,
+          formatter: (v) => v.toStringAsFixed(0),
         ),
         StatCard(
           title: 'Low Stock',
-          value: (ref.watch(lowInventoryProvider).value?.length ?? 0).toString(),
+          value: lowCount.toStringAsFixed(0),
           icon: Icons.warning_amber_outlined,
           iconColor: AppColors.danger,
           bgColor: const Color(0xFFFFEBEE),
+          animatedEnd: lowCount,
+          formatter: (v) => v.toStringAsFixed(0),
         ),
       ],
     );

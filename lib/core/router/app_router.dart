@@ -26,15 +26,23 @@ class _RouterNotifier extends ChangeNotifier {
 CustomTransitionPage<void> _fadePage({
   required LocalKey key,
   required Widget child,
-  Duration duration = const Duration(milliseconds: 220),
+  Duration duration = const Duration(milliseconds: 260),
 }) =>
     CustomTransitionPage<void>(
       key: key,
       child: child,
       transitionDuration: duration,
       reverseTransitionDuration: duration,
-      transitionsBuilder: (_, animation, __, child) =>
-          FadeTransition(opacity: animation, child: child),
+      transitionsBuilder: (_, animation, secondaryAnimation, child) {
+        final slide = Tween<Offset>(
+          begin: const Offset(0, 0.04),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic));
+        return SlideTransition(
+          position: slide,
+          child: FadeTransition(opacity: animation, child: child),
+        );
+      },
     );
 
 final routerProvider = Provider<GoRouter>((ref) {

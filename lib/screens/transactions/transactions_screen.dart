@@ -1,9 +1,24 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/transaction_model.dart';
 import '../../repositories/transaction_repository.dart';
+import '../../services/payment_service.dart';
+
+String _friendlyError(Object e) {
+  if (e is DioException) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final msg = data['message'] ?? data['error'] ?? data['msg'];
+      if (msg != null) return msg.toString();
+    }
+    final code = e.response?.statusCode;
+    return code != null ? 'Server error ($code)' : 'Network error';
+  }
+  return e.toString().replaceFirst('Exception: ', '');
+}
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -70,7 +85,43 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     );
   }
 
+  bool _isCardPayment(String paymentType) {
+    final t = paymentType.toLowerCase();
+    return t != 'cash' && t != 'check';
+  }
+
   Future<void> _doVoid(TransactionModel tx) async {
+    if (_isCardPayment(tx.paymentType)) {
+      final tpn = await PaymentService.getSavedTPN();
+      if (tpn == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('No terminal registered — go to Settings → Terminal Setup'),
+          backgroundColor: AppColors.danger,
+        ));
+        return;
+      }
+      try {
+        final result = await PaymentService.performVoid(tpn: tpn, refId: tx.id);
+        if (!result.approved) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Void declined: ${result.responseMessage}'),
+            backgroundColor: AppColors.danger,
+          ));
+          return;
+        }
+      } on PaymentException catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message),
+          backgroundColor: AppColors.danger,
+        ));
+        return;
+      }
+    }
+
+    // Record void in backend
     try {
       await ref.read(transactionRepositoryProvider).voidTransaction(tx.id);
       if (!mounted) return;
@@ -82,17 +133,50 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString().replaceFirst('Exception: ', '')),
+        content: Text(_friendlyError(e)),
         backgroundColor: AppColors.danger,
       ));
     }
   }
 
   Future<void> _doIssueRefund(TransactionModel tx) async {
+    if (_isCardPayment(tx.paymentType)) {
+      final tpn = await PaymentService.getSavedTPN();
+      if (tpn == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('No terminal registered — go to Settings → Terminal Setup'),
+          backgroundColor: AppColors.danger,
+        ));
+        return;
+      }
+      try {
+        final result = await PaymentService.performRefund(
+          tpn: tpn,
+          amount: tx.totalAmount,
+          refId: tx.id,
+        );
+        if (!result.approved) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Refund declined: ${result.responseMessage}'),
+            backgroundColor: AppColors.danger,
+          ));
+          return;
+        }
+      } on PaymentException catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(e.message),
+          backgroundColor: AppColors.danger,
+        ));
+        return;
+      }
+    }
+
+    // Record refund in backend
     try {
-      await ref
-          .read(transactionRepositoryProvider)
-          .issueRefundFromTransaction(tx.id);
+      await ref.read(transactionRepositoryProvider).issueRefundFromTransaction(tx.id);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Refund issued'),
@@ -102,7 +186,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString().replaceFirst('Exception: ', '')),
+        content: Text(_friendlyError(e)),
         backgroundColor: AppColors.danger,
       ));
     }
