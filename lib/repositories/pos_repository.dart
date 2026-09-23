@@ -127,10 +127,15 @@ class PosRepository {
   }
 
   // PUT /sales/cart/:saleId?cartState=...
+  // Backend reads cartState from the query string (req.query), not the body
+  // — sending it as a body field (the old implementation) meant the backend
+  // always saw cartState as undefined and 400'd with "Cart state should be
+  // Sale or Hold or Return" regardless of what value was actually passed.
   Future<void> sendToState(String saleId, String cartState) async {
     await _client.put(
       '${ApiConstants.holdSales}/$saleId',
-      data: <String, dynamic>{'cartState': cartState},
+      data: <String, dynamic>{},
+      queryParams: {'cartState': cartState},
     );
   }
 
@@ -167,6 +172,12 @@ class PosRepository {
   // GET /sales/cart-config
   Future<Map<String, dynamic>?> getCartConfig() async {
     final response = await _client.get(ApiConstants.cartConfig);
+    return (response['data'] ?? response) as Map<String, dynamic>?;
+  }
+
+  // GET /terminal/:id — full terminal doc (includes tpn), unlike cart-config's trimmed summary
+  Future<Map<String, dynamic>?> getTerminalDetails(String terminalId) async {
+    final response = await _client.get('${ApiConstants.terminals}/$terminalId');
     return (response['data'] ?? response) as Map<String, dynamic>?;
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -6,6 +7,23 @@ import '../models/dvpaylite_config.dart';
 class PaymentService {
   static const _channel = MethodChannel('com.driverpos.golf_pos_app/payment');
   static const _tpnKey = 'terminal_tpn';
+  // Bounds how long we wait on the DVPayLite terminal — without this, a
+  // hung terminal leaves the confirm button spinning forever with no way
+  // for the cashier to recover short of restarting the app.
+  static const _terminalTimeout = Duration(seconds: 90);
+
+  static Future<Map?> _invokeWithTimeout(
+    String method,
+    Map<String, dynamic> args,
+  ) {
+    return _channel.invokeMethod<Map>(method, args).timeout(
+      _terminalTimeout,
+      onTimeout: () => throw PlatformException(
+        code: 'TIMEOUT',
+        message: 'Terminal did not respond in time',
+      ),
+    );
+  }
 
   static Future<String?> getSavedTPN() async {
     final prefs = await SharedPreferences.getInstance();
@@ -44,7 +62,7 @@ class PaymentService {
     final ref = refId ?? const Uuid().v4().replaceAll('-', '').substring(0, 12);
     final config = await DvPayLiteConfig.load();
     try {
-      final result = await _channel.invokeMethod<Map>('performSale', {
+      final result = await _invokeWithTimeout('performSale', {
         'tpn': tpn,
         'applicationType': 'DVPAYLITE',
         'type': 'SALE',
@@ -68,7 +86,7 @@ class PaymentService {
   }) async {
     final config = await DvPayLiteConfig.load();
     try {
-      final result = await _channel.invokeMethod<Map>('performSale', {
+      final result = await _invokeWithTimeout('performSale', {
         'tpn': tpn,
         'applicationType': 'DVPAYLITE',
         'type': 'VOID',
@@ -90,7 +108,7 @@ class PaymentService {
   }) async {
     final config = await DvPayLiteConfig.load();
     try {
-      final result = await _channel.invokeMethod<Map>('performSale', {
+      final result = await _invokeWithTimeout('performSale', {
         'tpn': tpn,
         'applicationType': 'DVPAYLITE',
         'type': 'REFUND',

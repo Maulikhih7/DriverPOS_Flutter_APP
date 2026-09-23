@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'https://api.dev.driverpos.io/api/v1';
+  static const String baseUrl = 'https://api.driverpos.io/api/v1';
 
   // Dynamic page-config backend (Redis-backed, no auth required)
   static const String pageConfigBaseUrl = 'https://driverpos-backend-app.onrender.com';
@@ -90,13 +90,14 @@ class ApiConstants {
   // Payment / Transaction
   static const String payWithGiftCard = '/transaction/applyGiftCard';
   static const String checkout = '/transaction/checkout';
+  static const String transactionVerify = '/transaction/verify';
   static const String transactionRefund = '/transaction/refund';
   static const String issueRefund = '/transaction/issue-refund';
   static const String sendOtp = '/transaction/sendOtp';
   static const String transactionEmailReceipt = '/report/transaction/email';
   static const String transactionSearch = 'report/transaction/search';
   static const String transactionAmount = 'report/transaction/data';
-  static const String voidTransaction = '/transaction/void';
+  static const String voidTransaction = '/report/transaction/void';
 
   // Gift Cards
   static const String giftCards = '/giftCard';

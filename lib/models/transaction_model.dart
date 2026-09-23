@@ -26,17 +26,18 @@ class TransactionModel {
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['_id'] ?? json['id'] ?? '',
-      receiptNumber: json['receiptNumber']?.toString(),
+      receiptNumber: (json['orderId'] ?? json['receiptNumber'])?.toString(),
       totalAmount: _toDouble(json['totalAmount'] ?? json['amount']),
-      tax: _toDouble(json['tax'] ?? json['totalTax']),
+      tax: _toDouble(json['taxAmount'] ?? json['tax'] ?? json['totalTax']),
       paymentType: json['paymentType'] ?? json['type'] ?? 'Cash',
       status: json['status'] ?? 'Completed',
       customerName: json['customer'] is Map
-          ? '${json['customer']['firstName'] ?? ''} ${json['customer']['lastName'] ?? ''}'.trim()
+          ? (json['customer']['fullName'] ??
+              '${json['customer']['firstName'] ?? ''} ${json['customer']['lastName'] ?? ''}'.trim())
           : json['customerName'],
       employeeName: json['employee'] is Map
-          ? json['employee']['name']
-          : json['employeeName'],
+          ? (json['employee']['fullName'] ?? json['employee']['name'])
+          : (json['employee'] is String ? json['employee'] : json['employeeName']),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,

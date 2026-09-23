@@ -1,4 +1,6 @@
 # Miscellaneous
+store_assets/
+driverpos-backend-dev/
 *.class
 *.log
 *.pyc

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -362,6 +363,13 @@ class _SlotDetailModalState extends ConsumerState<SlotDetailModal>
           final guestFees = guest.feesForHoles(_holes);
           totalAmount += guestCount * guestFees.greenFee;
           totalTax += guestCount * guestFees.greenFeeTax;
+        } else {
+          // No "Guest Customer" pricing record for this course — proceeding
+          // would silently undercharge for the unfilled seats.
+          throw Exception(
+            "Course is missing a 'Guest Customer' pricing record — cannot "
+            'price $guestCount unfilled seat(s). Contact support.',
+          );
         }
       }
 
@@ -429,10 +437,11 @@ class _SlotDetailModalState extends ConsumerState<SlotDetailModal>
       }
     } catch (e) {
       String msg;
-      final resp = (e as dynamic).response;
-      final data = resp?.data;
-      if (data is Map && data['message'] != null) {
-        msg = data['message'].toString();
+      if (e is DioException) {
+        final data = e.response?.data;
+        msg = (data is Map && data['message'] != null)
+            ? data['message'].toString()
+            : e.toString().replaceFirst('Exception: ', '');
       } else {
         msg = e.toString().replaceFirst('Exception: ', '');
       }
@@ -542,10 +551,11 @@ class _SlotDetailModalState extends ConsumerState<SlotDetailModal>
       );
     } catch (e) {
       String msg;
-      final resp = (e as dynamic).response;
-      final data = resp?.data;
-      if (data is Map && data['message'] != null) {
-        msg = data['message'].toString();
+      if (e is DioException) {
+        final data = e.response?.data;
+        msg = (data is Map && data['message'] != null)
+            ? data['message'].toString()
+            : e.toString().replaceFirst('Exception: ', '');
       } else {
         msg = e.toString().replaceFirst('Exception: ', '');
       }

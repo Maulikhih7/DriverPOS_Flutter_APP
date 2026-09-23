@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/router/default_route.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/transaction_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../repositories/pos_repository.dart';
 import '../../repositories/transaction_repository.dart';
 
@@ -75,10 +77,10 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
     });
 
     try {
-      // Mark the sale as Return state on the server
+      // Stage the Return cart server-side from this order's line items
       await ref
-          .read(posRepositoryProvider)
-          .sendToState(tx.id, 'Return');
+          .read(transactionRepositoryProvider)
+          .issueRefundFromTransaction(tx.id);
 
       // Fetch the return cart
       final cart = await ref
@@ -511,7 +513,8 @@ class _RefundScreenState extends ConsumerState<RefundScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.go('/pos'),
+                onPressed: () =>
+                    context.go(defaultRouteForUser(ref.read(authProvider).user)),
                 child: const Text('Back to POS'),
               ),
             ),

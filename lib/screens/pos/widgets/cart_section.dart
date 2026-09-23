@@ -563,16 +563,24 @@ class _CartActions extends ConsumerWidget {
       return;
     }
 
-    // Push products to the server cart; result contains the server-side sale doc
+    // Push products to the server cart. This endpoint only ever replies with
+    // {message, success} — no totals — so the actual (discount-aware) totals
+    // have to be pulled from a follow-up GET /sales?cartState=Sale, which is
+    // the only endpoint that returns the server's computed totalCartAmount /
+    // totalTaxAmount / totalDiscountAmount. Skipping this step silently falls
+    // back to the client's naive price×qty+tax sum, which has no idea about
+    // membership/discount rules — undercutting nothing server-side, but
+    // overcharging the card via DVPayLite for the pre-discount amount.
     final result = await ref.read(cartProvider.notifier).checkout();
     if (!context.mounted) return;
 
     if (result != null) {
-      // Prefer server-side totals when available
-      final serverData = result['data'] as Map<String, dynamic>?;
+      final viewSales = await ref.refresh(viewSalesProvider.future);
+      final serverData = viewSales?['data'] as Map<String, dynamic>?;
       final serverTotal = (serverData?['totalCartAmount'] as num?)?.toDouble();
       final serverTax   = (serverData?['totalTaxAmount'] as num?)?.toDouble();
       final serverDiscount = (serverData?['totalDiscountAmount'] as num?)?.toDouble();
+      if (!context.mounted) return;
 
       context.push('/checkout', extra: {
         'total':        serverTotal ?? cartState.total,

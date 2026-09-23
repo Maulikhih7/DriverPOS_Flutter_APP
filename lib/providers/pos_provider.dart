@@ -3,7 +3,12 @@ import '../models/cart_model.dart';
 import '../models/customer_model.dart';
 import '../models/product_model.dart';
 import '../providers/auth_provider.dart';
+import '../repositories/customer_repository.dart';
 import '../repositories/pos_repository.dart';
+import '../services/payment_service.dart';
+
+// Cart pages default to this walk-in account rather than starting unassigned.
+const String _defaultGuestEmail = 'guest@golfpro.com';
 
 // ── Department & Label filters ────────────────────────────────────────────────
 
@@ -68,6 +73,29 @@ final cartConfigProvider =
   return ref.read(posRepositoryProvider).getCartConfig();
 });
 
+// TPN mapped to the logged-in workstation's terminal — not a value fixed on
+// the device. The login/cart-config responses only carry a trimmed terminal
+// summary (no tpn), so this looks up the full terminal doc by the id on the
+// current user. Falls back to the locally saved TPN only when that lookup
+// has nothing (e.g. offline, or terminal unmapped).
+final mappedTpnProvider = FutureProvider.autoDispose<String?>((ref) async {
+  final terminalId = ref.watch(authProvider).user?.terminal?.id;
+  if (terminalId != null && terminalId.isNotEmpty) {
+    try {
+      final terminal =
+          await ref.read(posRepositoryProvider).getTerminalDetails(terminalId);
+      final tpn = terminal?['tpn'] as String?;
+      if (tpn != null && tpn.isNotEmpty) {
+        await PaymentService.saveTPN(tpn);
+        return tpn;
+      }
+    } catch (_) {
+      // network/lookup failure — fall through to local cache below
+    }
+  }
+  return PaymentService.getSavedTPN();
+});
+
 // ── Cart ──────────────────────────────────────────────────────────────────────
 
 class CartState {
@@ -121,9 +149,30 @@ class CartState {
 
 class CartNotifier extends StateNotifier<CartState> {
   final PosRepository _repo;
+  final CustomerRepository _customerRepo;
   final Ref _ref;
 
-  CartNotifier(this._repo, this._ref) : super(const CartState());
+  CartNotifier(this._repo, this._customerRepo, this._ref)
+      : super(const CartState()) {
+    _loadDefaultCustomer();
+  }
+
+  Future<void> _loadDefaultCustomer() async {
+    if (state.customer != null) return;
+    try {
+      final results =
+          await _customerRepo.getCustomers(search: _defaultGuestEmail, limit: 5);
+      final guest = results.firstWhere(
+        (c) => (c.email ?? '').toLowerCase() == _defaultGuestEmail,
+      );
+      if (state.customer == null) {
+        state = state.copyWith(customer: guest);
+      }
+    } catch (_) {
+      // No guest account configured for this business, or offline —
+      // leave unselected so the cashier picks a customer manually.
+    }
+  }
 
   void addProduct(ProductModel product) {
     final existingIndex =
@@ -168,6 +217,7 @@ class CartNotifier extends StateNotifier<CartState> {
 
   void clearCart() {
     state = const CartState();
+    _loadDefaultCustomer();
   }
 
   /// Sends items to the server via POST /sales/add/item and returns the
@@ -222,5 +272,9 @@ class CartNotifier extends StateNotifier<CartState> {
 
 final cartProvider =
     StateNotifierProvider<CartNotifier, CartState>((ref) {
-  return CartNotifier(ref.read(posRepositoryProvider), ref);
+  return CartNotifier(
+    ref.read(posRepositoryProvider),
+    ref.read(customerRepositoryProvider),
+    ref,
+  );
 });

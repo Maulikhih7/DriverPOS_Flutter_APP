@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/router/default_route.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/customer_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/pos_provider.dart';
 import '../../repositories/customer_repository.dart';
 import '../../repositories/transaction_repository.dart';
@@ -73,7 +75,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _loadTPN() async {
-    final tpn = await PaymentService.getSavedTPN();
+    final tpn = await ref.read(mappedTpnProvider.future);
     if (mounted) setState(() { _savedTPN = tpn; _loadingTPN = false; });
   }
 
@@ -178,13 +180,41 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }
 
   Future<void> _doCard() async {
-    // Step 1 — launch DVPayLite
+    // Step 1 — create a pending P-18 transaction on the backend. No charge
+    // has happened yet, so a failure here is a plain, retryable error.
+    Map<String, dynamic> pending;
+    try {
+      pending = await ref.read(transactionRepositoryProvider).checkout(
+        pinNumber: _pinCtrl.text.trim(),
+        paymentType: 'Credit',
+        amount: widget.total,
+        totalAmount: widget.total,
+        totalDiscountAmount: widget.discountAmount ?? 0,
+        customerId: widget.customerId,
+        p18Device: true,
+      );
+    } catch (e) {
+      setState(() {
+        _processing = false;
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
+      return;
+    }
+    final referenceId = pending['referenceId'] as String?;
+    if (referenceId == null || referenceId.isEmpty) {
+      setState(() { _processing = false; _error = 'Backend did not return a P-18 reference ID.'; });
+      return;
+    }
+
+    // Step 2 — launch DVPayLite for the actual card charge, tagged with the
+    // backend's referenceId so the two records match up.
     PaymentResult result;
     try {
       result = await PaymentService.performSale(
         tpn: _savedTPN!,
         amount: widget.total,
         paymentType: 'CREDIT',
+        refId: referenceId,
       );
     } on PaymentException catch (e) {
       setState(() { _processing = false; _error = e.message; });
@@ -201,18 +231,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
 
-    // Step 2 — record in backend as Bypass with DVPayLite auth reference
-    final authRef = result.authCode.isNotEmpty ? result.authCode : result.refId;
-    await ref.read(transactionRepositoryProvider).checkout(
-      pinNumber: _pinCtrl.text.trim(),
-      paymentType: 'Bypass',
-      amount: widget.total,
-      totalAmount: widget.total,
-      totalDiscountAmount: widget.discountAmount ?? 0,
-      customerId: widget.customerId,
-      bypassReferenceId: authRef,
-    );
-    _onSuccess('Card payment approved  •  Auth: $authRef');
+    // Step 3 — verify with the backend. The card is already charged at this
+    // point — a failure here must never be shown as a plain decline, or the
+    // cashier may recharge a paid card.
+    try {
+      await ref.read(transactionRepositoryProvider).verifyP18Transaction(referenceId);
+    } catch (e) {
+      setState(() {
+        _processing = false;
+        _error = 'Card was charged (Auth: ${result.authCode}) but the sale failed to verify. '
+            'Do NOT recharge — note this auth code and contact support to reconcile.';
+      });
+      return;
+    }
+    _onSuccess('Card payment approved  •  Auth: ${result.authCode}');
   }
 
   // Stage a customer-owned gift card (balance already known)
@@ -281,6 +313,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Future<void> _doSplit() async {
     final cash = double.tryParse(_splitCashCtrl.text) ?? 0;
     final card = double.tryParse(_splitCardCtrl.text) ?? 0;
+    String? cardAuthRef;
 
     if (card > 0) {
       // Process card portion via DVPayLite first
@@ -299,18 +332,33 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         setState(() { _processing = false; _error = 'Card declined: ${result.responseMessage}'; });
         return;
       }
+      cardAuthRef = result.authCode.isNotEmpty ? result.authCode : result.refId;
     }
 
-    await ref.read(transactionRepositoryProvider).checkout(
-      pinNumber: _pinCtrl.text.trim(),
-      paymentType: 'Credit',
-      type: 'Split',
-      amount: widget.total,
-      totalAmount: widget.total,
-      cashAmount: cash,
-      cardAmount: card,
-      customerId: widget.customerId,
-    );
+    // The card portion (if any) is already charged at this point — a failure
+    // here must never be shown as a plain decline, or the cashier may
+    // recharge a paid card.
+    try {
+      await ref.read(transactionRepositoryProvider).checkout(
+        pinNumber: _pinCtrl.text.trim(),
+        paymentType: 'Credit',
+        type: 'Split',
+        amount: widget.total,
+        totalAmount: widget.total,
+        cashAmount: cash,
+        cardAmount: card,
+        customerId: widget.customerId,
+      );
+    } catch (e) {
+      setState(() {
+        _processing = false;
+        _error = cardAuthRef != null
+            ? 'Card portion was charged (Auth: $cardAuthRef) but the sale failed to save. '
+                'Do NOT recharge — note this auth code and contact support to reconcile.'
+            : e.toString().replaceFirst('Exception: ', '');
+      });
+      return;
+    }
     _onSuccess('Split payment recorded');
   }
 
@@ -392,7 +440,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             message: _successMessage,
             onComplete: () {
               ref.read(cartProvider.notifier).clearCart();
-              if (mounted) context.go('/pos');
+              if (mounted) {
+                context.go(defaultRouteForUser(ref.read(authProvider).user));
+              }
             },
           ),
         ],
@@ -620,7 +670,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => context.push('/terminal-settings'),
+              onPressed: () async {
+                await context.push('/terminal-settings');
+                _loadTPN();
+              },
               icon: const Icon(Icons.settings_outlined, size: 18),
               label: const Text('Go to Terminal Setup'),
             ),

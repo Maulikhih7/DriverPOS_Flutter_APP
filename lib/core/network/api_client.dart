@@ -5,7 +5,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/api_constants.dart';
 import '../constants/app_constants.dart';
+import '../logging/app_logger.dart';
 import 'encryption_service.dart';
+
+// Field names redacted from logged request bodies — card/auth data must
+// never land in a log file on the client's device.
+const _redactedKeys = {
+  'password',
+  'pin',
+  'cardnumber',
+  'cardnum',
+  'cvv',
+  'cvv2',
+  'track1',
+  'track2',
+  'token',
+  'accesstoken',
+  'refreshtoken',
+  'authorization',
+};
+
+dynamic _redactForLog(dynamic value) {
+  if (value is Map) {
+    return value.map((k, v) => MapEntry(
+        k, _redactedKeys.contains(k.toString().toLowerCase()) ? '***REDACTED***' : _redactForLog(v)));
+  }
+  if (value is List) {
+    return value.map(_redactForLog).toList();
+  }
+  return value;
+}
 
 // Notifier that the API client fires when the session expires.
 // Auth provider listens to this to reset state and go to login.
@@ -57,6 +86,8 @@ class ApiClient {
     // Encrypt request body (POST / PUT / PATCH / DELETE-with-body)
     // Dev/staging server runs decryptMiddleware which expects { iv, data, tag }
     final body = options.data;
+    AppLogger.instance.i('API',
+        '--> ${options.method} ${options.path} ${body is Map ? jsonEncode(_redactForLog(body)) : ''}');
     if (body != null && body is Map) {
       final plainText = jsonEncode(body);
       final encrypted = await EncryptionService.encrypt(plainText);
@@ -67,11 +98,17 @@ class ApiClient {
   }
 
   void _onResponse(Response response, ResponseInterceptorHandler handler) {
+    AppLogger.instance.i('API',
+        '<-- ${response.statusCode} ${response.requestOptions.method} ${response.requestOptions.path}');
     handler.next(response);
   }
 
   Future<void> _onError(
       DioException err, ErrorInterceptorHandler handler) async {
+    AppLogger.instance.e(
+        'API',
+        '<-- ERROR ${err.response?.statusCode} ${err.requestOptions.method} ${err.requestOptions.path} '
+            '${err.response?.data ?? err.message}');
     if (err.response?.statusCode == 401 && !_isRefreshing) {
       _isRefreshing = true;
       try {
@@ -118,8 +155,8 @@ class ApiClient {
     return response.data;
   }
 
-  Future<dynamic> put(String path, {dynamic data}) async {
-    final response = await _dio.put(path, data: data);
+  Future<dynamic> put(String path, {dynamic data, Map<String, dynamic>? queryParams}) async {
+    final response = await _dio.put(path, data: data, queryParameters: queryParams);
     return response.data;
   }
 

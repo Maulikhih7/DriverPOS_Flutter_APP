@@ -22,7 +22,7 @@ class SocketService {
   // ---------------------------------------------------------------------------
 
   static String get _socketUrl {
-    final base = ApiConstants.baseUrl; // e.g. https://api.dev.driverpos.io/api/v1
+    final base = ApiConstants.baseUrl; // e.g. https://api.driverpos.io/api/v1
     final uri = Uri.parse(base);
     final isDefaultPort =
         (uri.scheme == 'https' && uri.port == 443) ||

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/transaction_model.dart';
+import '../../providers/pos_provider.dart';
+import '../../repositories/pos_repository.dart';
 import '../../repositories/transaction_repository.dart';
 import '../../services/payment_service.dart';
 
@@ -92,7 +94,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   Future<void> _doVoid(TransactionModel tx) async {
     if (_isCardPayment(tx.paymentType)) {
-      final tpn = await PaymentService.getSavedTPN();
+      final tpn = await ref.read(mappedTpnProvider.future);
       if (tpn == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -139,9 +141,39 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
     }
   }
 
+  Future<String?> _promptForPin() {
+    final ctrl = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Employee PIN'),
+        content: TextField(
+          controller: ctrl,
+          autofocus: true,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: 'Enter PIN to authorize refund'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, ctrl.text.trim()),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _doIssueRefund(TransactionModel tx) async {
+    final pin = await _promptForPin();
+    if (pin == null || pin.isEmpty) return;
+
     if (_isCardPayment(tx.paymentType)) {
-      final tpn = await PaymentService.getSavedTPN();
+      final tpn = await ref.read(mappedTpnProvider.future);
       if (tpn == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -174,9 +206,26 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       }
     }
 
-    // Record refund in backend
+    // Record refund in backend: stage a "Return" cart from this order
+    // (issueRefundFromTransaction creates it server-side from the order's
+    // line items), pull that cart to get the customer/amount, then post the
+    // actual refund via refundOrder.
     try {
       await ref.read(transactionRepositoryProvider).issueRefundFromTransaction(tx.id);
+      final returnCart = await ref
+          .read(posRepositoryProvider)
+          .getViewSales(cartState: 'Return');
+      final customerId =
+          returnCart?['data']?['customerDetails']?['_id'] as String? ?? '';
+      final amount = ((returnCart?['data']?['totalCartAmount'] as num?)
+              ?.toDouble()) ??
+          tx.totalAmount;
+
+      await ref.read(transactionRepositoryProvider).refundOrder(
+            pinNumber: pin,
+            amount: amount,
+            customerId: customerId.isNotEmpty ? customerId : tx.id,
+          );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Refund issued'),

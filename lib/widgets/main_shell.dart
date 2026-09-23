@@ -59,7 +59,7 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   Future<void> _checkConnectivity() async {
     try {
-      final result = await InternetAddress.lookup('api.dev.driverpos.io')
+      final result = await InternetAddress.lookup('api.driverpos.io')
           .timeout(const Duration(seconds: 3));
       final online = result.isNotEmpty && result[0].rawAddress.isNotEmpty;
       if (mounted && online != _isOnline) setState(() => _isOnline = online);

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../screens/auth/login_screen.dart';
+import 'default_route.dart';
 import '../../screens/dashboard/dashboard_screen.dart';
 import '../../screens/payment/checkout_screen.dart';
 import '../../screens/pos/hold_carts_screen.dart';
@@ -52,14 +53,17 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: notifier,
     redirect: (context, state) {
-      final isAuthenticated = ref.read(authProvider).isAuthenticated;
+      final authState = ref.read(authProvider);
+      final isAuthenticated = authState.isAuthenticated;
       final loc = state.matchedLocation;
 
       // Always let splash render itself — it will navigate after its timer
       if (loc == '/splash') return null;
 
       if (!isAuthenticated && loc != '/login') return '/login';
-      if (isAuthenticated && loc == '/login') return '/tee-sheet';
+      if (isAuthenticated && loc == '/login') {
+        return defaultRouteForUser(authState.user);
+      }
       return null;
     },
     routes: [

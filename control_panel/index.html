@@ -170,9 +170,32 @@
   #toast.show { opacity: 1; transform: translateY(0); }
   #toast.err { background: #B91C1C; }
   .loading-note { padding: 24px; text-align: center; color: var(--muted); font-size: 13px; }
+
+  /* Deterrent-only password gate — NOT real security. The backend this panel
+     talks to has no auth of its own, so this only stops casual/accidental
+     access to the URL; anyone who opens devtools can bypass it. */
+  #auth-gate {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #auth-gate .box { background: var(--card); border-radius: 12px; padding: 28px 32px; width: 300px; text-align: center; }
+  #auth-gate h2 { margin: 0 0 14px; font-size: 16px; color: var(--text); }
+  #auth-gate input { width: 100%; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; margin-bottom: 10px; box-sizing: border-box; }
+  #auth-gate button { width: 100%; padding: 10px; border: none; border-radius: 8px; background: var(--green); color: white; font-weight: 700; cursor: pointer; }
+  #auth-gate .err { color: #DC2626; font-size: 12px; margin-top: 8px; min-height: 16px; }
 </style>
 </head>
 <body>
+
+<div id="auth-gate">
+  <div class="box">
+    <h2>Control Panel Access</h2>
+    <input type="password" id="auth-gate-input" placeholder="Passphrase" autofocus>
+    <button id="auth-gate-btn">Unlock</button>
+    <div class="err" id="auth-gate-err"></div>
+  </div>
+</div>
 
 <header>
   <div>
@@ -609,9 +632,36 @@ document.getElementById('teesheet-save').addEventListener('click', async () => {
 document.getElementById('teesheet-reload').addEventListener('click', loadTeeSheet);
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
-connectSocket();
-loadLogin();
-loadTeeSheet();
+// Gated behind the passphrase prompt below — nothing here fires (no socket
+// connect, no data pull/push) until the correct passphrase is entered.
+function bootPanel() {
+  connectSocket();
+  loadLogin();
+  loadTeeSheet();
+}
+
+// ── Auth gate (deterrent-only, see CSS comment above) ───────────────────────
+const PANEL_PASSPHRASE = 'driverpos2026';
+(function () {
+  const gate = document.getElementById('auth-gate');
+  const input = document.getElementById('auth-gate-input');
+  const btn = document.getElementById('auth-gate-btn');
+  const err = document.getElementById('auth-gate-err');
+
+  function tryUnlock() {
+    if (input.value === PANEL_PASSPHRASE) {
+      gate.style.display = 'none';
+      bootPanel();
+    } else {
+      err.textContent = 'Incorrect passphrase';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryUnlock(); });
+})();
 </script>
 </body>
 </html>

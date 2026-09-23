@@ -43,7 +43,7 @@ class TransactionRepository {
         .toList();
   }
 
-  Future<void> checkout({
+  Future<Map<String, dynamic>> checkout({
     required String pinNumber,
     required String paymentType,
     required double amount,
@@ -52,6 +52,7 @@ class TransactionRepository {
     double? changeGiven,
     String? terminalId,
     String? bypassReferenceId,
+    bool p18Device = false,
     String? customerId,
     // Gift card
     bool applyGiftCard = false,
@@ -93,6 +94,7 @@ class TransactionRepository {
     if (changeGiven != null) body['changeGiven'] = changeGiven;
     if (terminalId != null) body['terminalId'] = terminalId;
     if (bypassReferenceId != null) body['bypassReferenceId'] = bypassReferenceId;
+    if (p18Device) body['p18Device'] = true;
     if (type != null) body['type'] = type;
 
     // Gift card
@@ -130,7 +132,18 @@ class TransactionRepository {
     if (cashAmount != null) body['cashAmount'] = cashAmount;
     if (cardAmount != null) body['cardAmount'] = cardAmount;
 
-    await _client.post(ApiConstants.checkout, data: body);
+    final response = await _client.post(ApiConstants.checkout, data: body);
+    return (response is Map ? Map<String, dynamic>.from(response['data'] ?? response) : <String, dynamic>{});
+  }
+
+  /// PUT /transaction/verify/:referenceId
+  /// Confirms a pending P-18 device transaction once DVPayLite approves the sale.
+  Future<Map<String, dynamic>> verifyP18Transaction(String referenceId) async {
+    final response = await _client.put(
+      '${ApiConstants.transactionVerify}/$referenceId',
+      data: <String, dynamic>{},
+    );
+    return (response is Map ? Map<String, dynamic>.from(response['data'] ?? response) : <String, dynamic>{});
   }
 
   /// POST /transaction/refund
@@ -153,7 +166,10 @@ class TransactionRepository {
     );
   }
 
-  /// POST /transaction/issue-refund/:id
+  /// POST /transaction/issue-refund/:id — stages the refund: creates a fresh
+  /// server-side "Return" cart from this order's line items (deleting any
+  /// stale one for this employee first). Must be called before refundOrder(),
+  /// which looks up that Return cart to actually process the payment.
   Future<void> issueRefundFromTransaction(String transactionId) async {
     await _client.post('${ApiConstants.issueRefund}/$transactionId', data: <String, dynamic>{});
   }
@@ -187,7 +203,7 @@ class TransactionRepository {
         : ApiConstants.transactionReport;
 
     final response = await _client.get(path, queryParams: {
-      if (search != null && search.isNotEmpty) 'search': search,
+      if (search != null && search.isNotEmpty) 'name': search,
       if (startDate != null) 'startDate': startDate,
       if (endDate != null) 'endDate': endDate,
       'page': page,
@@ -209,8 +225,10 @@ class TransactionRepository {
     return TransactionModel.fromJson(response['data']);
   }
 
+  /// PUT /report/transaction/void/:id — toggles order.isVoid server-side.
+  /// Requires an admin-role account (backend route is authorizeAdmin-gated).
   Future<void> voidTransaction(String id) async {
-    await _client.post('${ApiConstants.voidTransaction}/$id', data: <String, dynamic>{});
+    await _client.put('${ApiConstants.voidTransaction}/$id', data: <String, dynamic>{});
   }
 
   Future<void> emailReceipt({
@@ -223,18 +241,4 @@ class TransactionRepository {
     );
   }
 
-  Future<void> issueRefund({
-    required String transactionId,
-    required double amount,
-    required String reason,
-  }) async {
-    await _client.post(
-      ApiConstants.transactionRefund,
-      data: {
-        'transactionId': transactionId,
-        'amount': amount,
-        'reason': reason,
-      },
-    );
-  }
 }
